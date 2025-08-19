@@ -1,8 +1,17 @@
-# Getting Started with Create React App
+# Knowledge Management Tool
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A simple knowledge management tool similar to Confluence, built with React. This tool allows you to create, edit, view, and search through documentation using a rich text editor.
 
-## Available Scripts
+## Technologies Used
+
+- React
+- TypeScript
+- Material UI for the user interface
+- Draft.js and react-draft-wysiwyg for rich text editing
+- React Router for navigation
+- localStorage for data persistence
+
+## Getting Started
 
 In the project directory, you can run:
 
