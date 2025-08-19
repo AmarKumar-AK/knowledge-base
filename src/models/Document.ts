@@ -3,6 +3,6 @@ export interface Document {
   title: string;
   content: string; // Will store Draft.js content as a serialized string
   tags: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }

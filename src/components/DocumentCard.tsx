@@ -20,7 +20,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDelete }) => {
   const navigate = useNavigate();
   
   // Format date to a readable string
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',

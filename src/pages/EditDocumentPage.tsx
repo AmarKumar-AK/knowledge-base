@@ -5,7 +5,9 @@ import {
   Box, 
   Paper,
   Breadcrumbs,
-  Link as MuiLink
+  Link as MuiLink,
+  CircularProgress,
+  Button
 } from '@mui/material';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Header from '../components/Header';
@@ -19,52 +21,60 @@ const EditDocumentPage: React.FC = () => {
   const [content, setContent] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [isNewDocument, setIsNewDocument] = useState(true);
+  const [loading, setLoading] = useState(!!id);
+  const [error, setError] = useState<string | null>(null);
+  const [, setSaving] = useState(false); // Using underscore to indicate unused variable
 
   useEffect(() => {
-    if (id) {
-      const doc = getDocumentById(id);
-      if (doc) {
-        setTitle(doc.title);
-        setContent(doc.content);
-        setTags(doc.tags);
-        setIsNewDocument(false);
-      } else {
-        // Document not found, redirect to home
-        navigate('/');
+    const fetchDocument = async () => {
+      if (!id) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const doc = await getDocumentById(id);
+        if (doc) {
+          setTitle(doc.title);
+          setContent(doc.content);
+          setTags(doc.tags);
+          setIsNewDocument(false);
+        } else {
+          // Document not found, redirect to home
+          navigate('/');
+        }
+      } catch (err) {
+        console.error('Error fetching document:', err);
+        setError('Failed to load the document for editing. Please try again later.');
+      } finally {
+        setLoading(false);
       }
-    } else {
-      // New document
-      setTitle('');
-      setContent('');
-      setTags([]);
-      setIsNewDocument(true);
-    }
+    };
+
+    fetchDocument();
   }, [id, navigate]);
 
-  const handleSave = (title: string, content: string, tags: string[]) => {
-    const document = {
-      id: id || '',
-      title,
-      content,
-      tags,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    
-    saveDocument(document);
-    
-    // Navigate to the view page for the saved document
-    if (id) {
-      navigate(`/view/${id}`);
-    } else {
-      // For new documents, we need to get the newly created document to find its ID
-      const docs = JSON.parse(localStorage.getItem('documents') || '[]');
-      const newDoc = docs.find((d: any) => d.title === title && d.content === content);
-      if (newDoc) {
-        navigate(`/view/${newDoc.id}`);
-      } else {
-        navigate('/');
-      }
+  const handleSave = async (title: string, content: string, tags: string[]) => {
+    setSaving(true);
+    try {
+      const documentToSave = {
+        id: id || '',
+        title,
+        content,
+        tags,
+        createdAt: new Date(), // The server will handle this correctly for updates
+        updatedAt: new Date()
+      };
+      
+      const savedDoc = await saveDocument(documentToSave);
+      
+      // Navigate to the view page for the saved document
+      navigate(`/view/${savedDoc.id}`);
+    } catch (err) {
+      console.error('Error saving document:', err);
+      setError('Failed to save the document. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -86,14 +96,32 @@ const EditDocumentPage: React.FC = () => {
             {isNewDocument ? 'Create New Document' : 'Edit Document'}
           </Typography>
           
-          <Box sx={{ mt: 3 }}>
-            <RichTextEditor
-              initialTitle={title}
-              initialContent={content}
-              initialTags={tags}
-              onSave={handleSave}
-            />
-          </Box>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : error ? (
+            <Box sx={{ p: 3, textAlign: 'center' }}>
+              <Typography color="error">{error}</Typography>
+              <Button 
+                variant="contained" 
+                component={Link} 
+                to="/"
+                sx={{ mt: 2 }}
+              >
+                Back to Home
+              </Button>
+            </Box>
+          ) : (
+            <Box sx={{ mt: 3 }}>
+              <RichTextEditor
+                initialTitle={title}
+                initialContent={content}
+                initialTags={tags}
+                onSave={handleSave}
+              />
+            </Box>
+          )}
         </Paper>
       </Container>
     </>

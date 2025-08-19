@@ -19,6 +19,7 @@ interface RichTextEditorProps {
   initialTitle?: string;
   initialContent?: string;
   initialTags?: string[];
+  isSaving?: boolean;
   onSave: (title: string, content: string, tags: string[]) => void;
 }
 
@@ -26,6 +27,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   initialTitle = '',
   initialContent = '',
   initialTags = [],
+  isSaving = false,
   onSave
 }) => {
   // State for the document title
@@ -154,11 +156,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       <Button
         variant="contained"
         color="primary"
-        startIcon={<SaveIcon />}
+        startIcon={isSaving ? null : <SaveIcon />}
         onClick={handleSave}
-        disabled={!title.trim()}
+        disabled={!title.trim() || isSaving}
       >
-        Save Document
+        {isSaving ? 'Saving...' : 'Save Document'}
       </Button>
     </Box>
   );
