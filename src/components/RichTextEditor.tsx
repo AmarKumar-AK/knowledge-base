@@ -15,17 +15,16 @@ import colorStyleMap, { textColorOptions, bgColorOptions } from './colorStyleMap
 import BackgroundColorPicker from './editor/BackgroundColorPicker';
 import TextColorPicker from './editor/TextColorPicker';
 import LinkDialog from './editor/LinkDialog';
+import TagsInput from './tags';
 import {
   Box,
   TextField,
   Button,
-  Chip,
-  InputAdornment,
-  IconButton,
   Paper,
   Typography,
   Divider,
-  Tooltip
+  Tooltip,
+  IconButton
 } from '@mui/material';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
@@ -34,7 +33,6 @@ import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
 import CodeIcon from '@mui/icons-material/Code';
 import LinkIcon from '@mui/icons-material/Link';
-import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
 import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
@@ -115,7 +113,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   
   // State for tags
   const [tags, setTags] = useState<string[]>(initialTags);
-  const [newTag, setNewTag] = useState('');
   
   // State for link dialog
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
@@ -158,24 +155,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const handleEditorChange = (state: EditorState) => {
     setEditorState(state);
-  };
-
-  const handleAddTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags([...tags, newTag.trim()]);
-      setNewTag('');
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddTag();
-    }
   };
 
   const handleSave = () => {
@@ -410,43 +389,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         sx={{ mb: 2 }}
       />
       
-      <Typography variant="subtitle1" gutterBottom>
-        Tags
-      </Typography>
-      <Box sx={{ display: 'flex', mb: 2 }}>
-        <TextField
-          variant="outlined"
-          size="small"
-          placeholder="Add tags"
-          value={newTag}
-          onChange={(e) => setNewTag(e.target.value)}
-          onKeyPress={handleKeyPress}
-          sx={{ flexGrow: 1, mr: 1 }}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton 
-                  onClick={handleAddTag}
-                  disabled={!newTag.trim() || tags.includes(newTag.trim())}
-                  size="small"
-                >
-                  <AddIcon />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
-      
-      <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-        {tags.map((tag, index) => (
-          <Chip
-            key={index}
-            label={tag}
-            onDelete={() => handleRemoveTag(tag)}
-          />
-        ))}
-      </Box>
+      <TagsInput 
+        tags={tags}
+        onTagsChange={setTags}
+      />
       
       <Typography variant="subtitle1" gutterBottom>
         Document Content
