@@ -46,7 +46,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDelete }) => {
     <Card sx={{ 
       minWidth: 275, 
       mb: 2, 
-      height: 240, // Increased height to accommodate tags better
+      height: 270, // Increased height to accommodate content better
       display: 'flex',
       flexDirection: 'column'
     }}>
@@ -56,7 +56,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDelete }) => {
           variant="h6" 
           component="div" 
           sx={{ 
-            mb: 1,
+            mb: 1.5, // Increased margin-bottom
             height: '1.5em',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -71,30 +71,30 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDelete }) => {
           variant="body2" 
           color="text.secondary"
           sx={{ 
-            height: '2.5em', // Height for approximately 2 lines
+            height: '3em', // Increased height for content (approx 2-3 lines)
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
-            mb: 1
+            mb: 2 // Increased margin-bottom to create more space
           }}
         >
           {getContentPreview()}
         </Typography>
         
-        {/* Two lines for tags with increased height */}
+        {/* Area for tags with increased height */}
         <Box sx={{ 
-          height: '4em', // Increased height for tags section
+          height: '4.5em', // Increased height for tags section
           overflow: 'hidden',
-          mb: 1
+          mb: 1.5 // Increased margin-bottom
         }}>
           {document.tags.map((tag, index) => (
             <Chip 
               key={index} 
               label={tag} 
               size="small" 
-              sx={{ mr: 0.5, mb: 0.5 }} 
+              sx={{ mr: 0.5, mb: 0.75 }} // Increased vertical spacing between tag rows
             />
           ))}
         </Box>

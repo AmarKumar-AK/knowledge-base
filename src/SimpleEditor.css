@@ -46,6 +46,21 @@
   color: #333;
 }
 
+/* Link styles */
+.public-DraftStyleDefault-link,
+.public-DraftStyleDefault-link a {
+  text-decoration: underline;
+  color: #1976d2;
+  cursor: pointer;
+}
+
+/* Make sure links in the readonly view are also properly styled */
+.DraftEditor-root a {
+  color: #1976d2;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .public-DraftStyleDefault-italic {
   font-style: italic;
 }

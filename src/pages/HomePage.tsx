@@ -50,11 +50,8 @@ const HomePage: React.FC = () => {
       <Header onSearch={handleSearch} />
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Knowledge Base
-          </Typography>
           {!loading && (
-            <Typography variant="subtitle1" color="text.secondary">
+            <Typography variant="h6" color="text.secondary">
               {documents.length} {documents.length === 1 ? 'document' : 'documents'} available
             </Typography>
           )}

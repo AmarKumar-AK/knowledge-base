@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Container, 
   Typography, 
@@ -11,11 +11,43 @@ import {
   CircularProgress
 } from '@mui/material';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { convertFromRaw, EditorState, Editor } from 'draft-js';
+import { convertFromRaw, EditorState, Editor, CompositeDecorator } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import Header from '../components/Header';
 import { getDocumentById } from '../utils/documentUtils';
 import { Document } from '../models/Document';
+
+// LinkComponent for the decorator (named differently to avoid conflict with react-router Link)
+const LinkComponent = (props: any) => {
+  const { url } = props.contentState.getEntity(props.entityKey).getData();
+  // Ensure URL is absolute and has a proper protocol
+  const formattedUrl = url.match(/^https?:\/\//i) ? url : `https://${url}`;
+  
+  return (
+    <a 
+      href={formattedUrl}
+      style={{ color: '#1976d2', textDecoration: 'underline' }}
+      target="_blank" 
+      rel="noopener noreferrer"
+    >
+      {props.children}
+    </a>
+  );
+};
+
+// Function to find link entities
+const findLinkEntities = (contentBlock: any, callback: any, contentState: any) => {
+  contentBlock.findEntityRanges(
+    (character: any) => {
+      const entityKey = character.getEntity();
+      return (
+        entityKey !== null &&
+        contentState.getEntity(entityKey).getType() === 'LINK'
+      );
+    },
+    callback
+  );
+};
 
 const ViewDocumentPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +56,16 @@ const ViewDocumentPage: React.FC = () => {
   const [editorState, setEditorState] = useState<EditorState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Create a decorator for links
+  const decorator = useMemo(() => {
+    return new CompositeDecorator([
+      {
+        strategy: findLinkEntities,
+        component: LinkComponent,
+      },
+    ]);
+  }, []);
 
   useEffect(() => {
     const fetchDocument = async () => {
@@ -38,7 +80,7 @@ const ViewDocumentPage: React.FC = () => {
           setDocument(doc);
           try {
             const contentState = convertFromRaw(JSON.parse(doc.content));
-            setEditorState(EditorState.createWithContent(contentState));
+            setEditorState(EditorState.createWithContent(contentState, decorator));
           } catch (e) {
             console.error('Error parsing document content:', e);
             setError('Error parsing document content. The document may be corrupted.');
@@ -56,7 +98,7 @@ const ViewDocumentPage: React.FC = () => {
     };
 
     fetchDocument();
-  }, [id, navigate]);
+  }, [id, navigate, decorator]);
 
   const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString('en-US', {
