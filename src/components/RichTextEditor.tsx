@@ -6,14 +6,11 @@ import {
   RichUtils, 
   getDefaultKeyBinding,
   Modifier,
-  ContentState,
-  SelectionState,
-  EntityInstance,
   CompositeDecorator
 } from 'draft-js';
 import { Editor } from 'draft-js';
 import 'draft-js/dist/Draft.css';
-import '../SimpleEditor.css';
+import '../RichTextEditor.css';
 import {
   Box,
   TextField,
@@ -41,7 +38,7 @@ import LinkIcon from '@mui/icons-material/Link';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 
-interface SimpleEditorProps {
+interface RichTextEditorProps {
   initialTitle?: string;
   initialContent?: string;
   initialTags?: string[];
@@ -81,7 +78,7 @@ const findLinkEntities = (contentBlock: any, callback: any, contentState: any) =
   );
 };
 
-const SimpleEditor: React.FC<SimpleEditorProps> = ({
+const RichTextEditor: React.FC<RichTextEditorProps> = ({
   initialTitle = '',
   initialContent = '',
   initialTags = [],
@@ -320,58 +317,67 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
   const toggleInlineStyle = (style: string) => {
     handleEditorChange(RichUtils.toggleInlineStyle(editorState, style));
   };
-
+  
   const toggleBlockType = (blockType: string) => {
     handleEditorChange(RichUtils.toggleBlockType(editorState, blockType));
   };
 
-  // Check if the current selection has the specified inline style
   const hasInlineStyle = (style: string) => {
-    const currentStyle = editorState.getCurrentInlineStyle();
-    return currentStyle.has(style);
+    return editorState.getCurrentInlineStyle().has(style);
   };
-
-  // Check if the current block has the specified block type
+  
   const hasBlockType = (blockType: string) => {
     const selection = editorState.getSelection();
-    const currentContent = editorState.getCurrentContent();
-    const currentBlock = currentContent.getBlockForKey(selection.getStartKey());
-    return currentBlock.getType() === blockType;
+    const currentBlockType = editorState
+      .getCurrentContent()
+      .getBlockForKey(selection.getStartKey())
+      .getType();
+    return currentBlockType === blockType;
   };
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box>
+      <Typography variant="subtitle1" gutterBottom>
+        Document Title
+      </Typography>
       <TextField
         fullWidth
-        label="Document Title"
         variant="outlined"
+        placeholder="Enter document title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        margin="normal"
-        placeholder="Enter document title"
+        sx={{ mb: 2 }}
       />
       
-      <TextField
-        fullWidth
-        label="Tags"
-        variant="outlined"
-        value={newTag}
-        onChange={(e) => setNewTag(e.target.value)}
-        onKeyPress={handleKeyPress}
-        margin="normal"
-        placeholder="Add tags (press Enter to add)"
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton onClick={handleAddTag} edge="end">
-                <AddIcon />
-              </IconButton>
-            </InputAdornment>
-          ),
-        }}
-      />
+      <Typography variant="subtitle1" gutterBottom>
+        Tags
+      </Typography>
+      <Box sx={{ display: 'flex', mb: 2 }}>
+        <TextField
+          variant="outlined"
+          size="small"
+          placeholder="Add tags"
+          value={newTag}
+          onChange={(e) => setNewTag(e.target.value)}
+          onKeyPress={handleKeyPress}
+          sx={{ flexGrow: 1, mr: 1 }}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton 
+                  onClick={handleAddTag}
+                  disabled={!newTag.trim() || tags.includes(newTag.trim())}
+                  size="small"
+                >
+                  <AddIcon />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
       
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+      <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
         {tags.map((tag, index) => (
           <Chip
             key={index}
@@ -450,11 +456,12 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
         elevation={2} 
         sx={{ 
           mb: 2, 
-          p: 2,
-          minHeight: '300px',
-          border: '1px solid #ddd',
-          borderRadius: '4px'
+          overflow: 'hidden',
+          '& .DraftEditor-root': {
+            minHeight: '300px'
+          }
         }}
+        className="rich-editor-wrapper"
       >
         <Editor
           editorState={editorState}
@@ -539,4 +546,4 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
   );
 };
 
-export default SimpleEditor;
+export default RichTextEditor;
