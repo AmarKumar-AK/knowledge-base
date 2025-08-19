@@ -62,7 +62,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   
   // Build folder tree
   const buildFolderTree = (parentId: string | null = null, level = 0): React.ReactNode => {
-    const subfolders = folders.filter(folder => folder.parentId === parentId);
+    const subfolders = folders
+      .filter(folder => folder.parentId === parentId)
+      // Sort folders alphabetically by name
+      .sort((a, b) => a.name.localeCompare(b.name));
     
     if (subfolders.length === 0 && level === 0) {
       return (

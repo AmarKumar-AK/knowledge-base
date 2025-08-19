@@ -111,13 +111,19 @@ const FolderPage: React.FC = () => {
         }
         
         // Get sub-folders
-        const subFolders = folders.filter(folder => folder.parentId === folderId);
+        const subFolders = folders
+          .filter(folder => folder.parentId === folderId)
+          // Sort sub-folders alphabetically by name
+          .sort((a, b) => a.name.localeCompare(b.name));
         setSubFolders(subFolders);
         
         // Get documents in this folder
         // For now, we'll filter client-side
         const allDocs = await getDocuments();
-        const docsInFolder = allDocs.filter(doc => doc.folderId === folderId);
+        const docsInFolder = allDocs
+          .filter(doc => doc.folderId === folderId)
+          // Sort documents alphabetically by title
+          .sort((a, b) => a.title.localeCompare(b.title));
         setDocuments(docsInFolder);
         
       } catch (err) {

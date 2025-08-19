@@ -31,7 +31,9 @@ app.get('/api/documents', (req, res) => {
       .map(file => {
         const fileContent = fs.readFileSync(path.join(DOCUMENTS_DIR, file), 'utf8');
         return JSON.parse(fileContent);
-      });
+      })
+      // Sort documents alphabetically by title
+      .sort((a, b) => a.title.localeCompare(b.title));
     res.json(documents);
   } catch (error) {
     console.error('Error reading documents:', error);
@@ -142,7 +144,9 @@ app.get('/api/search', (req, res) => {
           doc.tags.some(tag => tag.toLowerCase().includes(lowerQuery)) ||
           doc.content.toLowerCase().includes(lowerQuery)
         );
-      });
+      })
+      // Sort search results alphabetically by title
+      .sort((a, b) => a.title.localeCompare(b.title));
     
     res.json(documents);
   } catch (error) {
@@ -162,7 +166,9 @@ app.get('/api/folders', (req, res) => {
       .map(file => {
         const fileContent = fs.readFileSync(path.join(FOLDERS_DIR, file), 'utf8');
         return JSON.parse(fileContent);
-      });
+      })
+      // Sort folders alphabetically by name
+      .sort((a, b) => a.name.localeCompare(b.name));
     res.json(folders);
   } catch (error) {
     console.error('Error reading folders:', error);
