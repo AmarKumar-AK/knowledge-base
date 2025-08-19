@@ -14,8 +14,11 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { convertFromRaw, EditorState, Editor, CompositeDecorator } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import Header from '../components/Header';
+import Layout from '../components/Layout';
 import { getDocumentById } from '../utils/documentUtils';
+import { getFolderById } from '../utils/folderUtils';
 import { Document } from '../models/Document';
+import { Folder } from '../models/Folder';
 import colorStyleMap from '../components/colorStyleMap';
 
 // LinkComponent for the decorator (named differently to avoid conflict with react-router Link)
@@ -57,6 +60,7 @@ const ViewDocumentPage: React.FC = () => {
   const [editorState, setEditorState] = useState<EditorState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [folder, setFolder] = useState<Folder | null>(null);
   
   // Create a decorator for links
   const decorator = useMemo(() => {
@@ -79,6 +83,13 @@ const ViewDocumentPage: React.FC = () => {
         const doc = await getDocumentById(id);
         if (doc) {
           setDocument(doc);
+          
+          // If document has a folder, fetch folder details
+          if (doc.folderId) {
+            const folderData = await getFolderById(doc.folderId);
+            setFolder(folderData);
+          }
+          
           try {
             const contentState = convertFromRaw(JSON.parse(doc.content));
             setEditorState(EditorState.createWithContent(contentState, decorator));
@@ -88,7 +99,7 @@ const ViewDocumentPage: React.FC = () => {
           }
         } else {
           // Document not found
-          navigate('/');
+          navigate('/folder/root');
         }
       } catch (err) {
         console.error('Error fetching document:', err);
@@ -112,13 +123,23 @@ const ViewDocumentPage: React.FC = () => {
   };
 
   return (
-    <>
+    <Layout>
       <Header onSearch={() => {}} />
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
-          <MuiLink component={Link} to="/" underline="hover" color="inherit">
-            Home
+          <MuiLink component={Link} to="/folder/root" underline="hover" color="inherit">
+            All Documents
           </MuiLink>
+          {folder && (
+            <MuiLink 
+              component={Link} 
+              to={`/folder/${folder.id}`} 
+              underline="hover" 
+              color="inherit"
+            >
+              {folder.name}
+            </MuiLink>
+          )}
           {!loading && document && <Typography color="text.primary">{document.title}</Typography>}
         </Breadcrumbs>
 
@@ -132,7 +153,7 @@ const ViewDocumentPage: React.FC = () => {
             <Button 
               variant="contained" 
               component={Link} 
-              to="/"
+              to="/folder/root"
               sx={{ mt: 2 }}
             >
               Back to Home
@@ -186,8 +207,12 @@ const ViewDocumentPage: React.FC = () => {
             </Paper>
             
             <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button variant="outlined" component={Link} to="/">
-                Back to Documents
+              <Button 
+                variant="outlined" 
+                component={Link} 
+                to={document.folderId ? `/folder/${document.folderId}` : '/folder/root'}
+              >
+                Back to {folder ? folder.name : 'Documents'}
               </Button>
               <Button 
                 variant="contained" 
@@ -204,7 +229,7 @@ const ViewDocumentPage: React.FC = () => {
             <Button 
               variant="contained" 
               component={Link} 
-              to="/"
+              to="/folder/root"
               sx={{ mt: 2 }}
             >
               Back to Home
@@ -212,7 +237,7 @@ const ViewDocumentPage: React.FC = () => {
           </Box>
         )}
       </Container>
-    </>
+    </Layout>
   );
 };
 

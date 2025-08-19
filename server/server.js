@@ -7,10 +7,15 @@ const { v4: uuidv4 } = require('uuid');
 const app = express();
 const PORT = process.env.PORT || 5000;
 const DOCUMENTS_DIR = path.join(__dirname, 'documents');
+const FOLDERS_DIR = path.join(__dirname, 'folders');
 
-// Ensure documents directory exists
+// Ensure directories exist
 if (!fs.existsSync(DOCUMENTS_DIR)) {
   fs.mkdirSync(DOCUMENTS_DIR, { recursive: true });
+}
+
+if (!fs.existsSync(FOLDERS_DIR)) {
+  fs.mkdirSync(FOLDERS_DIR, { recursive: true });
 }
 
 // Middleware
@@ -143,6 +148,172 @@ app.get('/api/search', (req, res) => {
   } catch (error) {
     console.error('Error searching documents:', error);
     res.status(500).json({ message: 'Error searching documents' });
+  }
+});
+
+// ========== FOLDER ENDPOINTS ==========
+
+// Get all folders
+app.get('/api/folders', (req, res) => {
+  try {
+    const files = fs.readdirSync(FOLDERS_DIR);
+    const folders = files
+      .filter(file => file.endsWith('.json'))
+      .map(file => {
+        const fileContent = fs.readFileSync(path.join(FOLDERS_DIR, file), 'utf8');
+        return JSON.parse(fileContent);
+      });
+    res.json(folders);
+  } catch (error) {
+    console.error('Error reading folders:', error);
+    res.status(500).json({ message: 'Error fetching folders' });
+  }
+});
+
+// Get a single folder by ID
+app.get('/api/folders/:id', (req, res) => {
+  try {
+    // Special case for 'root'
+    if (req.params.id === 'root') {
+      return res.json({
+        id: 'root',
+        name: 'All Documents',
+        description: 'Root folder',
+        parentId: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+    }
+    
+    const filePath = path.join(FOLDERS_DIR, `${req.params.id}.json`);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'Folder not found' });
+    }
+    
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    res.json(JSON.parse(fileContent));
+  } catch (error) {
+    console.error('Error reading folder:', error);
+    res.status(500).json({ message: 'Error fetching folder' });
+  }
+});
+
+// Create a new folder
+app.post('/api/folders', (req, res) => {
+  try {
+    const folder = req.body;
+    
+    // Generate a unique ID if one isn't provided
+    if (!folder.id) {
+      folder.id = uuidv4();
+    }
+    
+    // Set creation and update dates
+    folder.createdAt = folder.createdAt || new Date().toISOString();
+    folder.updatedAt = new Date().toISOString();
+    
+    const filePath = path.join(FOLDERS_DIR, `${folder.id}.json`);
+    fs.writeFileSync(filePath, JSON.stringify(folder, null, 2));
+    
+    res.status(201).json(folder);
+  } catch (error) {
+    console.error('Error creating folder:', error);
+    res.status(500).json({ message: 'Error creating folder' });
+  }
+});
+
+// Update an existing folder
+app.put('/api/folders/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const folder = req.body;
+    const filePath = path.join(FOLDERS_DIR, `${id}.json`);
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'Folder not found' });
+    }
+    
+    // Preserve the original creation date
+    const existingFolder = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    folder.createdAt = existingFolder.createdAt;
+    folder.updatedAt = new Date().toISOString();
+    
+    fs.writeFileSync(filePath, JSON.stringify(folder, null, 2));
+    res.json(folder);
+  } catch (error) {
+    console.error('Error updating folder:', error);
+    res.status(500).json({ message: 'Error updating folder' });
+  }
+});
+
+// Delete a folder
+app.delete('/api/folders/:id', (req, res) => {
+  try {
+    const filePath = path.join(FOLDERS_DIR, `${req.params.id}.json`);
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'Folder not found' });
+    }
+    
+    // Check if folder has documents
+    const files = fs.readdirSync(DOCUMENTS_DIR);
+    const documents = files
+      .filter(file => file.endsWith('.json'))
+      .map(file => {
+        const fileContent = fs.readFileSync(path.join(DOCUMENTS_DIR, file), 'utf8');
+        return JSON.parse(fileContent);
+      });
+    
+    const hasDocuments = documents.some(doc => doc.folderId === req.params.id);
+    if (hasDocuments) {
+      return res.status(400).json({ message: 'Cannot delete folder with documents' });
+    }
+    
+    // Check if folder has subfolders
+    const folderFiles = fs.readdirSync(FOLDERS_DIR);
+    const folders = folderFiles
+      .filter(file => file.endsWith('.json'))
+      .map(file => {
+        const fileContent = fs.readFileSync(path.join(FOLDERS_DIR, file), 'utf8');
+        return JSON.parse(fileContent);
+      });
+    
+    const hasSubfolders = folders.some(folder => folder.parentId === req.params.id);
+    if (hasSubfolders) {
+      return res.status(400).json({ message: 'Cannot delete folder with subfolders' });
+    }
+    
+    fs.unlinkSync(filePath);
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting folder:', error);
+    res.status(500).json({ message: 'Error deleting folder' });
+  }
+});
+
+// Get documents in a folder
+app.get('/api/folders/:id/documents', (req, res) => {
+  try {
+    const folderId = req.params.id === 'root' ? null : req.params.id;
+    
+    const files = fs.readdirSync(DOCUMENTS_DIR);
+    const documents = files
+      .filter(file => file.endsWith('.json'))
+      .map(file => {
+        const fileContent = fs.readFileSync(path.join(DOCUMENTS_DIR, file), 'utf8');
+        return JSON.parse(fileContent);
+      })
+      .filter(doc => {
+        if (folderId === null) {
+          return doc.folderId === null || doc.folderId === undefined;
+        }
+        return doc.folderId === folderId;
+      });
+    
+    res.json(documents);
+  } catch (error) {
+    console.error('Error fetching documents in folder:', error);
+    res.status(500).json({ message: 'Error fetching documents in folder' });
   }
 });
 

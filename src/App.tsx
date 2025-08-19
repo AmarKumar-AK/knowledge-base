@@ -4,6 +4,7 @@ import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
 import HomePage from './pages/HomePage';
 import ViewDocumentPage from './pages/ViewDocumentPage';
 import EditDocumentPage from './pages/EditDocumentPage';
+import FolderPage from './pages/FolderPage';
 import './App.css';
 
 // Create a theme
@@ -28,6 +29,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/folder/:id" element={<FolderPage />} />
           <Route path="/view/:id" element={<ViewDocumentPage />} />
           <Route path="/edit/:id" element={<EditDocumentPage />} />
           <Route path="/edit" element={<EditDocumentPage />} />

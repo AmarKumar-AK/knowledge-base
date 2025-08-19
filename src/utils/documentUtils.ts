@@ -26,6 +26,11 @@ export const saveDocument = async (document: Document): Promise<Document> => {
       ? `${API_URL}/documents/${document.id}` 
       : `${API_URL}/documents`;
     
+    // Ensure folderId is properly set (null for root, string for a folder)
+    if (document.folderId === undefined) {
+      document.folderId = null;
+    }
+    
     const response = await fetch(url, {
       method,
       headers: {
