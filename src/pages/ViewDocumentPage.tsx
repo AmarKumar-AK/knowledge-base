@@ -16,7 +16,7 @@ import 'draft-js/dist/Draft.css';
 import Header from '../components/Header';
 import Layout from '../components/Layout';
 import { getDocumentById } from '../utils/documentUtils';
-import { getFolderById } from '../utils/folderUtils';
+import { getFolderById, getFolders } from '../utils/folderUtils';
 import { Document } from '../models/Document';
 import { Folder } from '../models/Folder';
 import colorStyleMap from '../components/colorStyleMap';
@@ -61,6 +61,7 @@ const ViewDocumentPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [folder, setFolder] = useState<Folder | null>(null);
+  const [allFolders, setAllFolders] = useState<Folder[]>([]);
   
   // Create a decorator for links
   const decorator = useMemo(() => {
@@ -80,6 +81,10 @@ const ViewDocumentPage: React.FC = () => {
       setError(null);
       
       try {
+        // Fetch all folders for breadcrumb navigation
+        const folders = await getFolders();
+        setAllFolders(folders);
+        
         const doc = await getDocumentById(id);
         if (doc) {
           setDocument(doc);
@@ -122,25 +127,73 @@ const ViewDocumentPage: React.FC = () => {
     });
   };
 
+  // Build folder path for breadcrumbs
+  const getFolderPath = () => {
+    // Build an array of folders from current folder up to root
+    const buildFolderChain = (folderId: string | null): Folder[] => {
+      if (!folderId || folderId === 'root') {
+        return [];
+      }
+      
+      const folderItem = allFolders.find(f => f.id === folderId);
+      if (!folderItem) {
+        return [];
+      }
+      
+      // Recursive call to get parent chain
+      const parentChain = buildFolderChain(folderItem.parentId || null);
+      return [...parentChain, folderItem];
+    };
+    
+    const folderChain = folder ? buildFolderChain(folder.id) : [];
+    const parts: React.ReactNode[] = [];
+    
+    // Add root link
+    parts.push(
+      <MuiLink 
+        component={Link} 
+        to="/folder/root" 
+        underline="hover" 
+        color="inherit" 
+        key="root"
+      >
+        Root
+      </MuiLink>
+    );
+    
+    // Add intermediate folders in the chain
+    folderChain.forEach((folderItem) => {
+      parts.push(
+        <MuiLink 
+          component={Link} 
+          to={`/folder/${folderItem.id}`} 
+          underline="hover" 
+          color="inherit"
+          key={folderItem.id}
+        >
+          {folderItem.name}
+        </MuiLink>
+      );
+    });
+    
+    // Add document title as the final part
+    if (document) {
+      parts.push(
+        <Typography color="text.primary" key="document">
+          {document.title}
+        </Typography>
+      );
+    }
+    
+    return parts;
+  };
+
   return (
     <Layout>
       <Header onSearch={() => {}} />
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
-          <MuiLink component={Link} to="/folder/root" underline="hover" color="inherit">
-            Root
-          </MuiLink>
-          {folder && (
-            <MuiLink 
-              component={Link} 
-              to={`/folder/${folder.id}`} 
-              underline="hover" 
-              color="inherit"
-            >
-              {folder.name}
-            </MuiLink>
-          )}
-          {!loading && document && <Typography color="text.primary">{document.title}</Typography>}
+          {getFolderPath()}
         </Breadcrumbs>
 
         {loading ? (
