@@ -5,43 +5,36 @@ import {
   convertFromRaw, 
   RichUtils, 
   getDefaultKeyBinding,
-  Modifier,
   CompositeDecorator
 } from 'draft-js';
 import { Editor } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import '../RichTextEditor.css';
-import colorStyleMap, { textColorOptions, bgColorOptions, ColorOption } from './colorStyleMap';
 import {
   Box,
   TextField,
   Button,
-  Chip,
-  InputAdornment,
-  IconButton,
   Paper,
   Typography,
-  Divider,
-  Tooltip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Popover
 } from '@mui/material';
-import FormatBoldIcon from '@mui/icons-material/FormatBold';
-import FormatItalicIcon from '@mui/icons-material/FormatItalic';
-import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
-import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
-import CodeIcon from '@mui/icons-material/Code';
-import LinkIcon from '@mui/icons-material/Link';
-import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
-import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
-import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
-import ClearIcon from '@mui/icons-material/Clear';
+
+// Import our editor components
+import {
+  Link,
+  findLinkEntities,
+  LinkDialog,
+  ColorPicker,
+  EditorToolbar,
+  TagsInput,
+  createLink,
+  removeLink,
+  removeTextColors,
+  removeBackgroundColors,
+  colorStyleMap,
+  textColorOptions,
+  bgColorOptions
+} from './editor';
 
 interface RichTextEditorProps {
   initialTitle?: string;
@@ -50,38 +43,6 @@ interface RichTextEditorProps {
   isSaving?: boolean;
   onSave: (title: string, content: string, tags: string[]) => void;
 }
-
-// Link component for the decorator
-const Link = (props: any) => {
-  const { url } = props.contentState.getEntity(props.entityKey).getData();
-  // Ensure URL is absolute and has a proper protocol
-  const formattedUrl = url.match(/^https?:\/\//i) ? url : `https://${url}`;
-  
-  return (
-    <a 
-      href={formattedUrl}
-      style={{ color: '#1976d2', textDecoration: 'underline' }}
-      target="_blank" 
-      rel="noopener noreferrer"
-    >
-      {props.children}
-    </a>
-  );
-};
-
-// Function to find link entities
-const findLinkEntities = (contentBlock: any, callback: any, contentState: any) => {
-  contentBlock.findEntityRanges(
-    (character: any) => {
-      const entityKey = character.getEntity();
-      return (
-        entityKey !== null &&
-        contentState.getEntity(entityKey).getType() === 'LINK'
-      );
-    },
-    callback
-  );
-};
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({
   initialTitle = '',
@@ -198,7 +159,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       return 'handled';
     }
     if (command === 'remove-link') {
-      removeLink();
+      handleEditorChange(removeLink(editorState));
       return 'handled';
     }
     
@@ -254,71 +215,21 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   const confirmLink = () => {
-    // Ensure URL has proper protocol
-    let url = linkUrl.trim();
-    if (url && !url.match(/^https?:\/\//i)) {
-      url = 'https://' + url;
-    }
-    
-    const contentState = editorState.getCurrentContent();
-    const contentStateWithEntity = contentState.createEntity(
-      'LINK',
-      'MUTABLE',
-      { url }
-    );
-    const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
-    
-    let nextEditorState = EditorState.set(editorState, { 
-      currentContent: contentStateWithEntity 
-    });
-    
-    // If text is already selected, apply the link to that selection
-    if (!editorState.getSelection().isCollapsed()) {
-      // First remove any existing links on this selection (to avoid stacking)
-      nextEditorState = RichUtils.toggleLink(
-        nextEditorState,
-        nextEditorState.getSelection(),
-        null
-      );
-      // Then apply the new link
-      nextEditorState = RichUtils.toggleLink(
-        nextEditorState,
-        nextEditorState.getSelection(),
-        entityKey
-      );
-    } else if (linkText) {
-      // If no text is selected but linkText is provided, insert it with the link
-      const selection = nextEditorState.getSelection();
-      const contentStateWithText = Modifier.insertText(
-        contentStateWithEntity,
-        selection,
-        linkText,
-        undefined,
-        entityKey
-      );
-      nextEditorState = EditorState.push(
-        nextEditorState,
-        contentStateWithText,
-        'insert-characters'
-      );
-    }
-    
+    const nextEditorState = createLink(editorState, linkUrl, linkText);
     handleEditorChange(nextEditorState);
     closeLinkDialog();
   };
   
-  // Function to remove a link from selected text
-  const removeLink = () => {
+  // Remove unused function
+  /*
+  const handleRemoveLink = () => {
     const selection = editorState.getSelection();
     if (!selection.isCollapsed()) {
-      const nextEditorState = RichUtils.toggleLink(
-        editorState,
-        selection,
-        null
-      );
+      const nextEditorState = removeLink(editorState, selection);
       handleEditorChange(nextEditorState);
     }
   };
+  */
   
   const keyBindingFn = (e: React.KeyboardEvent) => {
     // Add keyboard shortcuts for formatting
@@ -357,28 +268,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   
   // Remove text color from selected text
   const removeTextColor = () => {
-    // Remove all text color styles
-    let nextEditorState = editorState;
-    textColorOptions.forEach(({ style }: { style: string }) => {
-      if (editorState.getCurrentInlineStyle().has(style)) {
-        nextEditorState = RichUtils.toggleInlineStyle(nextEditorState, style);
-      }
-    });
-    
+    const styles = textColorOptions.map(option => option.style);
+    const nextEditorState = removeTextColors(editorState, styles);
     handleEditorChange(nextEditorState);
     closeTextColorPicker();
   };
   
   // Remove background color from selected text
   const removeBgColor = () => {
-    // Remove all background color styles
-    let nextEditorState = editorState;
-    bgColorOptions.forEach(({ style }: { style: string }) => {
-      if (editorState.getCurrentInlineStyle().has(style)) {
-        nextEditorState = RichUtils.toggleInlineStyle(nextEditorState, style);
-      }
-    });
-    
+    const styles = bgColorOptions.map(option => option.style);
+    const nextEditorState = removeBackgroundColors(editorState, styles);
     handleEditorChange(nextEditorState);
     closeBgColorPicker();
   };
@@ -417,116 +316,28 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       <Typography variant="subtitle1" gutterBottom>
         Tags
       </Typography>
-      <Box sx={{ display: 'flex', mb: 2 }}>
-        <TextField
-          variant="outlined"
-          size="small"
-          placeholder="Add tags"
-          value={newTag}
-          onChange={(e) => setNewTag(e.target.value)}
-          onKeyPress={handleKeyPress}
-          sx={{ flexGrow: 1, mr: 1 }}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton 
-                  onClick={handleAddTag}
-                  disabled={!newTag.trim() || tags.includes(newTag.trim())}
-                  size="small"
-                >
-                  <AddIcon />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
-      
-      <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-        {tags.map((tag, index) => (
-          <Chip
-            key={index}
-            label={tag}
-            onDelete={() => handleRemoveTag(tag)}
-          />
-        ))}
-      </Box>
+      <TagsInput
+        tags={tags}
+        newTag={newTag}
+        onNewTagChange={(e) => setNewTag(e.target.value)}
+        onAddTag={handleAddTag}
+        onDeleteTag={handleRemoveTag}
+        onKeyPress={handleKeyPress}
+      />
       
       <Typography variant="subtitle1" gutterBottom>
         Document Content
       </Typography>
       
-      <Box sx={{ mb: 1, display: 'flex', gap: 1 }}>
-        <Tooltip title="Bold">
-          <IconButton 
-            onClick={() => toggleInlineStyle('BOLD')}
-            color={hasInlineStyle('BOLD') ? "primary" : "default"}
-          >
-            <FormatBoldIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Italic">
-          <IconButton 
-            onClick={() => toggleInlineStyle('ITALIC')}
-            color={hasInlineStyle('ITALIC') ? "primary" : "default"}
-          >
-            <FormatItalicIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Underline">
-          <IconButton 
-            onClick={() => toggleInlineStyle('UNDERLINE')}
-            color={hasInlineStyle('UNDERLINE') ? "primary" : "default"}
-          >
-            <FormatUnderlinedIcon />
-          </IconButton>
-        </Tooltip>
-        <Divider orientation="vertical" flexItem />
-        <Tooltip title="Text Color">
-          <IconButton onClick={openTextColorPicker}>
-            <FormatColorTextIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Background Color">
-          <IconButton onClick={openBgColorPicker}>
-            <FormatColorFillIcon />
-          </IconButton>
-        </Tooltip>
-        <Divider orientation="vertical" flexItem />
-        <Tooltip title="Bulleted List">
-          <IconButton 
-            onClick={() => toggleBlockType('unordered-list-item')}
-            color={hasBlockType('unordered-list-item') ? "primary" : "default"}
-          >
-            <FormatListBulletedIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Numbered List">
-          <IconButton 
-            onClick={() => toggleBlockType('ordered-list-item')}
-            color={hasBlockType('ordered-list-item') ? "primary" : "default"}
-          >
-            <FormatListNumberedIcon />
-          </IconButton>
-        </Tooltip>
-        <Divider orientation="vertical" flexItem />
-        <Tooltip title="Code Block (Ctrl+Shift+K)">
-          <IconButton 
-            onClick={() => toggleBlockType('code-block')}
-            color={hasBlockType('code-block') ? "primary" : "default"}
-          >
-            <CodeIcon />
-          </IconButton>
-        </Tooltip>
-        <Divider orientation="vertical" flexItem />
-        <Tooltip title="Add/Edit Link (Ctrl+K) | Remove Link (Ctrl+Shift+U)">
-          <IconButton 
-            onClick={openLinkDialog}
-          >
-            <LinkIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
+      <EditorToolbar
+        onToggleInlineStyle={toggleInlineStyle}
+        onToggleBlockType={toggleBlockType}
+        onOpenTextColorPicker={openTextColorPicker}
+        onOpenBgColorPicker={openBgColorPicker}
+        onOpenLinkDialog={openLinkDialog}
+        hasInlineStyle={hasInlineStyle}
+        hasBlockType={hasBlockType}
+      />
       
       <Paper 
         elevation={2} 
@@ -561,140 +372,42 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       </Button>
 
       {/* Link Dialog */}
-      <Dialog open={linkDialogOpen} onClose={closeLinkDialog}>
-        <DialogTitle>
-          {linkUrl ? 'Edit Link' : 'Add Link'}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Enter the URL and text for your link. If you don't include http:// or https://, 
-            https:// will be added automatically.
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="link-text"
-            label="Link Text"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={linkText}
-            onChange={(e) => setLinkText(e.target.value)}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            id="link-url"
-            label="URL (e.g., example.com or https://example.com)"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={linkUrl}
-            onChange={(e) => setLinkUrl(e.target.value)}
-            placeholder="example.com"
-            helperText="Enter domain name only or full URL with http:// or https://"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeLinkDialog} color="primary">
-            Cancel
-          </Button>
-          {linkUrl && (
-            <Button 
-              onClick={() => {
-                removeLink();
-                closeLinkDialog();
-              }} 
-              color="error"
-            >
-              Remove Link
-            </Button>
-          )}
-          <Button 
-            onClick={confirmLink} 
-            color="primary" 
-            disabled={!linkUrl.trim()}
-          >
-            {linkUrl ? 'Update Link' : 'Add Link'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Link Dialog */}
+      <LinkDialog
+        open={linkDialogOpen}
+        onClose={closeLinkDialog}
+        linkUrl={linkUrl}
+        linkText={linkText}
+        onLinkTextChange={(e) => setLinkText(e.target.value)}
+        onLinkUrlChange={(e) => setLinkUrl(e.target.value)}
+        onConfirm={confirmLink}
+        onRemove={() => {
+          handleEditorChange(removeLink(editorState));
+          closeLinkDialog();
+        }}
+      />
 
       {/* Text Color Picker */}
-      <Popover
+      <ColorPicker
         open={Boolean(textColorAnchorEl)}
         anchorEl={textColorAnchorEl}
         onClose={closeTextColorPicker}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
-      >
-        <Box sx={{ p: 1, display: 'flex', flexWrap: 'wrap', maxWidth: '220px' }}>
-          {textColorOptions.map((option: ColorOption) => (
-            <Tooltip key={option.style} title={option.label}>
-              <IconButton
-                onClick={() => applyTextColor(option.style)}
-                sx={{
-                  width: 28,
-                  height: 28,
-                  m: 0.5,
-                  backgroundColor: option.color,
-                  '&:hover': {
-                    backgroundColor: option.color,
-                    opacity: 0.8,
-                  },
-                }}
-              >
-                <span />
-              </IconButton>
-            </Tooltip>
-          ))}
-          <Tooltip title="Remove Color">
-            <IconButton onClick={removeTextColor} sx={{ m: 0.5 }}>
-              <ClearIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Popover>
+        colorOptions={textColorOptions}
+        onSelectColor={applyTextColor}
+        onRemoveColor={removeTextColor}
+        title="Text Color"
+      />
 
       {/* Background Color Picker */}
-      <Popover
+      <ColorPicker
         open={Boolean(bgColorAnchorEl)}
         anchorEl={bgColorAnchorEl}
         onClose={closeBgColorPicker}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
-      >
-        <Box sx={{ p: 1, display: 'flex', flexWrap: 'wrap', maxWidth: '220px' }}>
-          {bgColorOptions.map((option: ColorOption) => (
-            <Tooltip key={option.style} title={option.label}>
-              <IconButton
-                onClick={() => applyBgColor(option.style)}
-                sx={{
-                  width: 28,
-                  height: 28,
-                  m: 0.5,
-                  backgroundColor: option.color,
-                  '&:hover': {
-                    backgroundColor: option.color,
-                    opacity: 0.8,
-                  },
-                }}
-              >
-                <span />
-              </IconButton>
-            </Tooltip>
-          ))}
-          <Tooltip title="Remove Background">
-            <IconButton onClick={removeBgColor} sx={{ m: 0.5 }}>
-              <ClearIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Popover>
+        colorOptions={bgColorOptions}
+        onSelectColor={applyBgColor}
+        onRemoveColor={removeBgColor}
+        title="Background Color"
+      />
     </Box>
   );
 };
