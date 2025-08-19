@@ -5,12 +5,10 @@ import {
   Typography, 
   InputBase, 
   Box,
-  Button,
   alpha,
   styled
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
 
 // Styled search component
@@ -67,10 +65,6 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
     onSearch(e.target.value);
   };
 
-  const handleNewDocument = () => {
-    navigate('/edit');
-  };
-
   return (
     <AppBar position="static">
       <Toolbar>
@@ -99,13 +93,6 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
           />
         </Search>
         <Box sx={{ flexGrow: 1 }} />
-        <Button 
-          color="inherit" 
-          startIcon={<AddIcon />}
-          onClick={handleNewDocument}
-        >
-          New Document
-        </Button>
       </Toolbar>
     </AppBar>
   );

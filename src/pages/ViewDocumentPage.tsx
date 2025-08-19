@@ -128,7 +128,7 @@ const ViewDocumentPage: React.FC = () => {
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
           <MuiLink component={Link} to="/folder/root" underline="hover" color="inherit">
-            All Documents
+            Root
           </MuiLink>
           {folder && (
             <MuiLink 
@@ -156,7 +156,7 @@ const ViewDocumentPage: React.FC = () => {
               to="/folder/root"
               sx={{ mt: 2 }}
             >
-              Back to Home
+              Back to Root
             </Button>
           </Box>
         ) : document && editorState ? (
@@ -232,7 +232,7 @@ const ViewDocumentPage: React.FC = () => {
               to="/folder/root"
               sx={{ mt: 2 }}
             >
-              Back to Home
+              Back to Root
             </Button>
           </Box>
         )}

@@ -171,72 +171,98 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             boxSizing: 'border-box',
             borderRight: '1px solid rgba(0, 0, 0, 0.12)',
             pt: 8, // Add space for the header
+            display: 'flex',
+            flexDirection: 'column',
           },
         }}
       >
+        {/* Drawer content area (scrollable) */}
         <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          px: 2,
-          py: 1
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          overflow: 'hidden',
         }}>
-          <Typography variant="h6" color="primary">
-            Folders
-          </Typography>
-          <Tooltip title="Create new folder">
-            <IconButton color="primary" onClick={handleCreateFolder}>
-              <CreateNewFolderIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-        
-        <Divider />
-        
-        <List>
-          <ListItem 
-            disablePadding
-            sx={{ 
-              backgroundColor: currentFolderId === 'root' || !currentFolderId 
-                ? 'rgba(25, 118, 210, 0.08)' 
-                : 'transparent',
-              borderLeft: (currentFolderId === 'root' || !currentFolderId) ? 3 : 0,
-              borderColor: 'primary.main',
-            }}
-          >
-            <ListItemButton 
-              onClick={() => navigate('/folder/root')}
-              dense
-            >
-              <ListItemIcon sx={{ minWidth: 36 }}>
-                <DescriptionIcon />
-              </ListItemIcon>
-              <ListItemText 
-                primary="All Documents" 
-                primaryTypographyProps={{
-                  variant: 'body2',
-                  fontWeight: (currentFolderId === 'root' || !currentFolderId) ? 'bold' : 'normal'
+          {/* Header area */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            px: 2,
+            py: 1,
+            flexShrink: 0, // Prevent shrinking
+          }}>
+            <Typography variant="h6" color="primary">
+              Folders
+            </Typography>
+            <Tooltip title="Create new folder">
+              <IconButton color="primary" onClick={handleCreateFolder}>
+                <CreateNewFolderIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+          
+          <Divider sx={{ flexShrink: 0 }} />
+          
+          {/* Scrollable content area */}
+          <Box sx={{ 
+            flexGrow: 1,
+            overflow: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+          }}>
+            <List>
+              <ListItem 
+                disablePadding
+                sx={{ 
+                  backgroundColor: currentFolderId === 'root' || !currentFolderId 
+                    ? 'rgba(25, 118, 210, 0.08)' 
+                    : 'transparent',
+                  borderLeft: (currentFolderId === 'root' || !currentFolderId) ? 3 : 0,
+                  borderColor: 'primary.main',
                 }}
-              />
-            </ListItemButton>
-          </ListItem>
-        </List>
-        
-        <Divider />
-        
-        <List>
-          {buildFolderTree()}
-        </List>
-        
-        <Box sx={{ p: 2, mt: 'auto' }}>
-          <Button 
-            variant="contained" 
-            startIcon={<AddIcon />}
-            fullWidth
-            onClick={() => navigate('/edit')}
-          >
-            New Document
-          </Button>
+              >
+                <ListItemButton 
+                  onClick={() => navigate('/folder/root')}
+                  dense
+                >
+                  <ListItemIcon sx={{ minWidth: 36 }}>
+                    <DescriptionIcon />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Root" 
+                    primaryTypographyProps={{
+                      variant: 'body2',
+                      fontWeight: (currentFolderId === 'root' || !currentFolderId) ? 'bold' : 'normal'
+                    }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            </List>
+            
+            <Divider />
+            
+            <List sx={{ flexGrow: 1 }}>
+              {buildFolderTree()}
+            </List>
+          </Box>
+          
+          {/* Fixed bottom area */}
+          <Box sx={{ 
+            p: 2, 
+            borderTop: '1px solid rgba(0, 0, 0, 0.12)',
+            backgroundColor: '#fff',
+            flexShrink: 0, // Prevent shrinking
+          }}>
+            <Button 
+              variant="contained" 
+              startIcon={<AddIcon />}
+              fullWidth
+              onClick={() => navigate('/edit')}
+            >
+              New Document
+            </Button>
+          </Box>
         </Box>
       </Drawer>
       

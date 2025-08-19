@@ -194,7 +194,7 @@ const FolderPage: React.FC = () => {
         color="inherit" 
         key="root"
       >
-        All Documents
+        Root
       </MuiLink>
     );
     
@@ -212,7 +212,7 @@ const FolderPage: React.FC = () => {
   
   const getFolderTitle = () => {
     if (isRootFolder) {
-      return 'All Documents';
+      return 'Root';
     }
     return currentFolder?.name || 'Loading...';
   };
