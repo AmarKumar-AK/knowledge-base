@@ -1,7 +1,7 @@
 {
   "id": "0d2b75e9-0a18-499a-87c2-a40bc543dc2d",
   "title": "Amar Document",
-  "content": "{\"blocks\":[{\"key\":\"4h4s5\",\"text\":\"Hello, This is amar kumar\",\"type\":\"unstyled\",\"depth\":0,\"inlineStyleRanges\":[{\"offset\":15,\"length\":10,\"style\":\"bg-pink\"},{\"offset\":15,\"length\":10,\"style\":\"bg-blue\"},{\"offset\":0,\"length\":5,\"style\":\"text-green\"},{\"offset\":15,\"length\":10,\"style\":\"bg-red\"},{\"offset\":0,\"length\":5,\"style\":\"text-pink\"},{\"offset\":0,\"length\":5,\"style\":\"text-blue\"},{\"offset\":15,\"length\":10,\"style\":\"bg-green\"},{\"offset\":0,\"length\":5,\"style\":\"text-purple\"},{\"offset\":0,\"length\":5,\"style\":\"text-teal\"}],\"entityRanges\":[{\"offset\":7,\"length\":5,\"key\":0}],\"data\":{}}],\"entityMap\":{\"0\":{\"type\":\"LINK\",\"mutability\":\"MUTABLE\",\"data\":{\"url\":\"https://github.com\"}}}}",
+  "content": "{\"blocks\":[{\"key\":\"4h4s5\",\"text\":\"Hello, This is amar kumar\",\"type\":\"unordered-list-item\",\"depth\":0,\"inlineStyleRanges\":[{\"offset\":15,\"length\":10,\"style\":\"bg-blue\"},{\"offset\":0,\"length\":5,\"style\":\"text-green\"},{\"offset\":0,\"length\":5,\"style\":\"BOLD\"},{\"offset\":15,\"length\":10,\"style\":\"bg-red\"},{\"offset\":15,\"length\":10,\"style\":\"UNDERLINE\"},{\"offset\":12,\"length\":2,\"style\":\"ITALIC\"},{\"offset\":0,\"length\":5,\"style\":\"text-pink\"},{\"offset\":0,\"length\":5,\"style\":\"text-blue\"},{\"offset\":0,\"length\":5,\"style\":\"text-purple\"},{\"offset\":0,\"length\":5,\"style\":\"text-teal\"},{\"offset\":15,\"length\":10,\"style\":\"bg-pink\"},{\"offset\":15,\"length\":10,\"style\":\"bg-green\"}],\"entityRanges\":[{\"offset\":7,\"length\":4,\"key\":0},{\"offset\":11,\"length\":1,\"key\":1}],\"data\":{}},{\"key\":\"8s4ns\",\"text\":\"This is user1\",\"type\":\"ordered-list-item\",\"depth\":0,\"inlineStyleRanges\":[],\"entityRanges\":[],\"data\":{}},{\"key\":\"btrnr\",\"text\":\"This is code snippet\",\"type\":\"code-block\",\"depth\":0,\"inlineStyleRanges\":[],\"entityRanges\":[],\"data\":{}}],\"entityMap\":{\"0\":{\"type\":\"LINK\",\"mutability\":\"MUTABLE\",\"data\":{\"url\":\"https://example.com\"}},\"1\":{\"type\":\"LINK\",\"mutability\":\"MUTABLE\",\"data\":{\"url\":\"https://github.com\"}}}}",
   "tags": [
     "test",
     "test1",
@@ -10,5 +10,5 @@
     "test4"
   ],
   "createdAt": "2025-08-19T10:02:51.302Z",
-  "updatedAt": "2025-08-19T13:13:07.331Z"
+  "updatedAt": "2025-08-19T13:38:31.841Z"
 }

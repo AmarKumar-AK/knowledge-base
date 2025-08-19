@@ -5,32 +5,21 @@ import {
   convertFromRaw, 
   RichUtils, 
   getDefaultKeyBinding,
-  Modifier,
   CompositeDecorator
 } from 'draft-js';
 import { Editor } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import '../RichTextEditor.css';
 import colorStyleMap, { textColorOptions, bgColorOptions } from './colorStyleMap';
-import { BackgroundColorPicker, TextColorPicker, LinkDialog } from './editor';
 import TagsInput from './tags';
+import { EditorToolbar, LinkDialog } from './toolbar';
 import {
   Box,
   TextField,
   Button,
   Paper,
-  Typography,
-  Divider,
-  Tooltip,
-  IconButton
+  Typography
 } from '@mui/material';
-import FormatBoldIcon from '@mui/icons-material/FormatBold';
-import FormatItalicIcon from '@mui/icons-material/FormatItalic';
-import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
-import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
-import CodeIcon from '@mui/icons-material/Code';
-import LinkIcon from '@mui/icons-material/Link';
 import SaveIcon from '@mui/icons-material/Save';
 
 interface RichTextEditorProps {
@@ -112,8 +101,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   
   // State for link dialog
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
-  const [linkUrl, setLinkUrl] = useState('');
-  const [linkText, setLinkText] = useState('');
 
   useEffect(() => {
     if (initialContent) {
@@ -149,7 +136,15 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       return 'handled';
     }
     if (command === 'remove-link') {
-      removeLink();
+      const selection = editorState.getSelection();
+      if (!selection.isCollapsed()) {
+        const nextEditorState = RichUtils.toggleLink(
+          editorState,
+          selection,
+          null
+        );
+        handleEditorChange(nextEditorState);
+      }
       return 'handled';
     }
     
@@ -162,115 +157,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     return 'not-handled';
   };
 
-  // Link handling functions
+  // Simple function to open link dialog
   const openLinkDialog = () => {
-    const selection = editorState.getSelection();
-    if (!selection.isCollapsed()) {
-      const contentState = editorState.getCurrentContent();
-      const startKey = selection.getStartKey();
-      const startOffset = selection.getStartOffset();
-      const endOffset = selection.getEndOffset();
-      const block = contentState.getBlockForKey(startKey);
-      const selectedText = block.getText().slice(startOffset, endOffset);
-      setLinkText(selectedText);
-      
-      // Check if the selected text already has a link
-      const entityKey = block.getEntityAt(startOffset);
-      if (entityKey) {
-        const entity = contentState.getEntity(entityKey);
-        if (entity.getType() === 'LINK') {
-          // If there's already a link, get its URL
-          const { url } = entity.getData();
-          setLinkUrl(url);
-        } else {
-          setLinkUrl('');
-        }
-      } else {
-        setLinkUrl('');
-      }
-      
-      setLinkDialogOpen(true);
-    } else {
-      // If no text is selected, show an empty dialog
-      setLinkText('');
-      setLinkUrl('');
-      setLinkDialogOpen(true);
-    }
+    setLinkDialogOpen(true);
   };
 
-  const closeLinkDialog = () => {
-    setLinkDialogOpen(false);
-    setLinkUrl('');
-    setLinkText('');
-  };
-
-  const confirmLink = () => {
-    // Ensure URL has proper protocol
-    let url = linkUrl.trim();
-    if (url && !url.match(/^https?:\/\//i)) {
-      url = 'https://' + url;
-    }
-    
-    const contentState = editorState.getCurrentContent();
-    const contentStateWithEntity = contentState.createEntity(
-      'LINK',
-      'MUTABLE',
-      { url }
-    );
-    const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
-    
-    let nextEditorState = EditorState.set(editorState, { 
-      currentContent: contentStateWithEntity 
-    });
-    
-    // If text is already selected, apply the link to that selection
-    if (!editorState.getSelection().isCollapsed()) {
-      // First remove any existing links on this selection (to avoid stacking)
-      nextEditorState = RichUtils.toggleLink(
-        nextEditorState,
-        nextEditorState.getSelection(),
-        null
-      );
-      // Then apply the new link
-      nextEditorState = RichUtils.toggleLink(
-        nextEditorState,
-        nextEditorState.getSelection(),
-        entityKey
-      );
-    } else if (linkText) {
-      // If no text is selected but linkText is provided, insert it with the link
-      const selection = nextEditorState.getSelection();
-      const contentStateWithText = Modifier.insertText(
-        contentStateWithEntity,
-        selection,
-        linkText,
-        undefined,
-        entityKey
-      );
-      nextEditorState = EditorState.push(
-        nextEditorState,
-        contentStateWithText,
-        'insert-characters'
-      );
-    }
-    
-    handleEditorChange(nextEditorState);
-    closeLinkDialog();
-  };
-  
-  // Function to remove a link from selected text
-  const removeLink = () => {
-    const selection = editorState.getSelection();
-    if (!selection.isCollapsed()) {
-      const nextEditorState = RichUtils.toggleLink(
-        editorState,
-        selection,
-        null
-      );
-      handleEditorChange(nextEditorState);
-    }
-  };
-  
   const keyBindingFn = (e: React.KeyboardEvent) => {
     // Add keyboard shortcuts for formatting
     if (e.ctrlKey || e.metaKey) {
@@ -288,27 +179,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       }
     }
     return getDefaultKeyBinding(e);
-  };
-
-  const toggleInlineStyle = (style: string) => {
-    handleEditorChange(RichUtils.toggleInlineStyle(editorState, style));
-  };
-  
-  const toggleBlockType = (blockType: string) => {
-    handleEditorChange(RichUtils.toggleBlockType(editorState, blockType));
-  };
-
-  const hasInlineStyle = (style: string) => {
-    return editorState.getCurrentInlineStyle().has(style);
-  };
-  
-  const hasBlockType = (blockType: string) => {
-    const selection = editorState.getSelection();
-    const currentBlockType = editorState
-      .getCurrentContent()
-      .getBlockForKey(selection.getStartKey())
-      .getType();
-    return currentBlockType === blockType;
   };
 
   return (
@@ -334,82 +204,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         Document Content
       </Typography>
       
-      <Box sx={{ mb: 1, display: 'flex', gap: 1 }}>
-        <Tooltip title="Bold">
-          <IconButton 
-            onClick={() => toggleInlineStyle('BOLD')}
-            color={hasInlineStyle('BOLD') ? "primary" : "default"}
-          >
-            <FormatBoldIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Italic">
-          <IconButton 
-            onClick={() => toggleInlineStyle('ITALIC')}
-            color={hasInlineStyle('ITALIC') ? "primary" : "default"}
-          >
-            <FormatItalicIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Underline">
-          <IconButton 
-            onClick={() => toggleInlineStyle('UNDERLINE')}
-            color={hasInlineStyle('UNDERLINE') ? "primary" : "default"}
-          >
-            <FormatUnderlinedIcon />
-          </IconButton>
-        </Tooltip>
-        <Divider orientation="vertical" flexItem />
-
-        {/* Text Color Picker */}
-        <TextColorPicker
-          editorState={editorState}
-          onEditorChange={handleEditorChange}
-          colorOptions={textColorOptions}
-        />
-
-        {/* Background Color Picker */}
-        <BackgroundColorPicker
-          editorState={editorState}
-          onEditorChange={handleEditorChange}
-          colorOptions={bgColorOptions}
-        />
-        
-        <Divider orientation="vertical" flexItem />
-        <Tooltip title="Bulleted List">
-          <IconButton 
-            onClick={() => toggleBlockType('unordered-list-item')}
-            color={hasBlockType('unordered-list-item') ? "primary" : "default"}
-          >
-            <FormatListBulletedIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Numbered List">
-          <IconButton 
-            onClick={() => toggleBlockType('ordered-list-item')}
-            color={hasBlockType('ordered-list-item') ? "primary" : "default"}
-          >
-            <FormatListNumberedIcon />
-          </IconButton>
-        </Tooltip>
-        <Divider orientation="vertical" flexItem />
-        <Tooltip title="Code Block (Ctrl+Shift+K)">
-          <IconButton 
-            onClick={() => toggleBlockType('code-block')}
-            color={hasBlockType('code-block') ? "primary" : "default"}
-          >
-            <CodeIcon />
-          </IconButton>
-        </Tooltip>
-        <Divider orientation="vertical" flexItem />
-        <Tooltip title="Add/Edit Link (Ctrl+K) | Remove Link (Ctrl+Shift+U)">
-          <IconButton 
-            onClick={openLinkDialog}
-          >
-            <LinkIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
+      <EditorToolbar
+        editorState={editorState}
+        onEditorChange={handleEditorChange}
+        textColorOptions={textColorOptions}
+        bgColorOptions={bgColorOptions}
+        onOpenLinkDialog={openLinkDialog}
+      />
       
       <Paper 
         elevation={2} 
@@ -445,14 +246,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
       {/* Link Dialog */}
       <LinkDialog
-        open={linkDialogOpen}
-        linkUrl={linkUrl}
-        linkText={linkText}
-        onClose={closeLinkDialog}
-        onConfirm={confirmLink}
-        onRemoveLink={removeLink}
-        onLinkTextChange={setLinkText}
-        onLinkUrlChange={setLinkUrl}
+        isOpen={linkDialogOpen}
+        editorState={editorState}
+        onEditorChange={handleEditorChange}
+        onClose={() => setLinkDialogOpen(false)}
       />
     </Box>
   );
