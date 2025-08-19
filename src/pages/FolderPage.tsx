@@ -8,13 +8,10 @@ import {
   Breadcrumbs,
   Link as MuiLink,
   Divider,
-  Tabs,
-  Tab,
   Alert
 } from '@mui/material';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import AddIcon from '@mui/icons-material/Add';
-import FolderIcon from '@mui/icons-material/Folder';
 import DescriptionIcon from '@mui/icons-material/Description';
 
 import Header from '../components/Header';
@@ -27,32 +24,6 @@ import { Folder } from '../models/Folder';
 import { getDocuments, deleteDocument } from '../utils/documentUtils';
 import { getFolders, getFolderById, saveFolder, deleteFolder } from '../utils/folderUtils';
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`folder-tabpanel-${index}`}
-      aria-labelledby={`folder-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ pt: 3 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  );
-}
-
 const FolderPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -64,7 +35,6 @@ const FolderPage: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [subFolders, setSubFolders] = useState<Folder[]>([]);
   const [allFolders, setAllFolders] = useState<Folder[]>([]);
-  const [tabValue, setTabValue] = useState(0);
   
   // Dialog states
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
@@ -72,10 +42,6 @@ const FolderPage: React.FC = () => {
   
   const isRootFolder = id === 'root';
   const folderId = isRootFolder ? null : id;
-  
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
   
   // Fetch folder data, including documents and subfolders
   useEffect(() => {
@@ -275,63 +241,42 @@ const FolderPage: React.FC = () => {
           </Alert>
         ) : (
           <>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-              <Tabs value={tabValue} onChange={handleTabChange} aria-label="folder tabs">
-                <Tab 
-                  icon={<FolderIcon />} 
-                  iconPosition="start" 
-                  label={`Folders (${subFolders.length})`} 
-                  id="folder-tab-0"
-                  aria-controls="folder-tabpanel-0"
-                />
-                <Tab 
-                  icon={<DescriptionIcon />} 
-                  iconPosition="start" 
-                  label={`Documents (${documents.length})`} 
-                  id="folder-tab-1"
-                  aria-controls="folder-tabpanel-1"
-                />
-              </Tabs>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="h6" component="div" sx={{ mb: 2 }}>
+                {subFolders.length > 0 || documents.length > 0 ? 
+                  `Folders & Documents (${subFolders.length + documents.length})` : 
+                  'No content yet'}
+              </Typography>
+
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                {/* Show folders first */}
+                {subFolders.map((folder) => (
+                  <Box key={folder.id} sx={{ width: { xs: '100%', sm: '47%', md: '31%' }, mb: 2 }}>
+                    <FolderCard 
+                      folder={folder} 
+                      onDelete={handleDeleteFolder}
+                      onEdit={handleEditFolder}
+                    />
+                  </Box>
+                ))}
+                
+                {/* Then show documents */}
+                {documents.map((doc) => (
+                  <Box key={doc.id} sx={{ width: { xs: '100%', sm: '47%', md: '31%' }, mb: 2 }}>
+                    <DocumentCard 
+                      document={doc} 
+                      onDelete={handleDeleteDocument} 
+                    />
+                  </Box>
+                ))}
+              </Box>
+              
+              {subFolders.length === 0 && documents.length === 0 && (
+                <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 4 }}>
+                  This folder is empty. Create a new folder or document to get started.
+                </Typography>
+              )}
             </Box>
-            
-            <TabPanel value={tabValue} index={0}>
-              {subFolders.length > 0 ? (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                  {subFolders.map((folder) => (
-                    <Box key={folder.id} sx={{ width: { xs: '100%', sm: '47%', md: '31%' }, mb: 2 }}>
-                      <FolderCard 
-                        folder={folder} 
-                        onDelete={handleDeleteFolder}
-                        onEdit={handleEditFolder}
-                      />
-                    </Box>
-                  ))}
-                </Box>
-              ) : (
-                <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 4 }}>
-                  No sub-folders found. Create a new folder to organize your documents.
-                </Typography>
-              )}
-            </TabPanel>
-            
-            <TabPanel value={tabValue} index={1}>
-              {documents.length > 0 ? (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                  {documents.map((doc) => (
-                    <Box key={doc.id} sx={{ width: { xs: '100%', sm: '47%', md: '31%' }, mb: 2 }}>
-                      <DocumentCard 
-                        document={doc} 
-                        onDelete={handleDeleteDocument} 
-                      />
-                    </Box>
-                  ))}
-                </Box>
-              ) : (
-                <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 4 }}>
-                  No documents in this folder. Create a new document to get started.
-                </Typography>
-              )}
-            </TabPanel>
           </>
         )}
       </Container>
