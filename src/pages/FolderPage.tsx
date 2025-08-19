@@ -155,9 +155,26 @@ const FolderPage: React.FC = () => {
   };
   
   const getFolderPath = () => {
-    const parts = [];
+    // Build an array of folders from current folder up to root
+    const buildFolderChain = (folderId: string | null): Folder[] => {
+      if (!folderId || folderId === 'root') {
+        return [];
+      }
+      
+      const folder = allFolders.find(f => f.id === folderId);
+      if (!folder) {
+        return [];
+      }
+      
+      // Recursive call to get parent chain
+      const parentChain = buildFolderChain(folder.parentId || null);
+      return [...parentChain, folder];
+    };
     
-    // Add root
+    const folderChain = currentFolder ? buildFolderChain(currentFolder.id) : [];
+    const parts: React.ReactNode[] = [];
+    
+    // Add root link
     parts.push(
       <MuiLink 
         component={Link} 
@@ -170,14 +187,30 @@ const FolderPage: React.FC = () => {
       </MuiLink>
     );
     
-    // If we're in a sub-folder, add the path
-    if (currentFolder) {
-      parts.push(
-        <Typography color="text.primary" key={currentFolder.id}>
-          {currentFolder.name}
-        </Typography>
-      );
-    }
+    // Add intermediate folders in the chain
+    folderChain.forEach((folder, index) => {
+      if (index < folderChain.length - 1) {
+        // This is an intermediate folder - should be a link
+        parts.push(
+          <MuiLink 
+            component={Link} 
+            to={`/folder/${folder.id}`} 
+            underline="hover" 
+            color="inherit" 
+            key={folder.id}
+          >
+            {folder.name}
+          </MuiLink>
+        );
+      } else {
+        // This is the current folder - should be text
+        parts.push(
+          <Typography color="text.primary" key={folder.id}>
+            {folder.name}
+          </Typography>
+        );
+      }
+    });
     
     return parts;
   };
