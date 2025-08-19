@@ -12,9 +12,7 @@ import { Editor } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import '../RichTextEditor.css';
 import colorStyleMap, { textColorOptions, bgColorOptions } from './colorStyleMap';
-import BackgroundColorPicker from './editor/BackgroundColorPicker';
-import TextColorPicker from './editor/TextColorPicker';
-import LinkDialog from './editor/LinkDialog';
+import { BackgroundColorPicker, TextColorPicker, LinkDialog } from './editor';
 import TagsInput from './tags';
 import {
   Box,
