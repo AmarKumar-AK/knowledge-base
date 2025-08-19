@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { EditorState, convertToRaw, convertFromRaw, RichUtils } from 'draft-js';
+import { EditorState, convertToRaw, convertFromRaw, RichUtils, getDefaultKeyBinding } from 'draft-js';
 import { Editor } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import '../SimpleEditor.css';
@@ -20,6 +20,7 @@ import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
+import CodeIcon from '@mui/icons-material/Code';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 
@@ -101,12 +102,30 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
   };
   
   const handleKeyCommand = (command: string, editorState: EditorState) => {
+    // Custom commands
+    if (command === 'code-block') {
+      handleEditorChange(RichUtils.toggleBlockType(editorState, 'code-block'));
+      return 'handled';
+    }
+    
+    // Default commands
     const newState = RichUtils.handleKeyCommand(editorState, command);
     if (newState) {
       handleEditorChange(newState);
       return 'handled';
     }
     return 'not-handled';
+  };
+  
+  const keyBindingFn = (e: React.KeyboardEvent) => {
+    // Add keyboard shortcuts for formatting
+    if (e.ctrlKey || e.metaKey) {
+      // Code block: Ctrl+Shift+K
+      if (e.shiftKey && e.key === 'k') {
+        return 'code-block';
+      }
+    }
+    return getDefaultKeyBinding(e);
   };
 
   const toggleInlineStyle = (style: string) => {
@@ -219,6 +238,15 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
             <FormatListNumberedIcon />
           </IconButton>
         </Tooltip>
+        <Divider orientation="vertical" flexItem />
+        <Tooltip title="Code Block (Ctrl+Shift+K)">
+          <IconButton 
+            onClick={() => toggleBlockType('code-block')}
+            color={hasBlockType('code-block') ? "primary" : "default"}
+          >
+            <CodeIcon />
+          </IconButton>
+        </Tooltip>
       </Box>
       
       <Paper 
@@ -235,6 +263,7 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
           editorState={editorState}
           onChange={handleEditorChange}
           handleKeyCommand={handleKeyCommand}
+          keyBindingFn={keyBindingFn}
           spellCheck={true}
           placeholder="Start typing here..."
         />
