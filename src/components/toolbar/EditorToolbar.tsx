@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { EditorState, RichUtils } from 'draft-js';
 import {
   Box,
@@ -16,22 +16,23 @@ import LinkIcon from '@mui/icons-material/Link';
 import { ColorOption } from '../colorStyleMap';
 import TextColorPicker from './TextColorPicker';
 import BackgroundColorPicker from './BackgroundColorPicker';
+import LinkDialog from './LinkDialog';
 
 interface EditorToolbarProps {
   editorState: EditorState;
   onEditorChange: (editorState: EditorState) => void;
   textColorOptions: ColorOption[];
   bgColorOptions: ColorOption[];
-  onOpenLinkDialog: () => void;
 }
 
 const EditorToolbar: React.FC<EditorToolbarProps> = ({
   editorState,
   onEditorChange,
   textColorOptions,
-  bgColorOptions,
-  onOpenLinkDialog
+  bgColorOptions
 }) => {
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+
   const toggleInlineStyle = (style: string) => {
     onEditorChange(RichUtils.toggleInlineStyle(editorState, style));
   };
@@ -54,82 +55,100 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   };
 
   return (
-    <Box sx={{ mb: 1, display: 'flex', gap: 1 }}>
-      <Tooltip title="Bold">
-        <IconButton 
-          onClick={() => toggleInlineStyle('BOLD')}
-          color={hasInlineStyle('BOLD') ? "primary" : "default"}
-        >
-          <FormatBoldIcon />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Italic">
-        <IconButton 
-          onClick={() => toggleInlineStyle('ITALIC')}
-          color={hasInlineStyle('ITALIC') ? "primary" : "default"}
-        >
-          <FormatItalicIcon />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Underline">
-        <IconButton 
-          onClick={() => toggleInlineStyle('UNDERLINE')}
-          color={hasInlineStyle('UNDERLINE') ? "primary" : "default"}
-        >
-          <FormatUnderlinedIcon />
-        </IconButton>
-      </Tooltip>
-      <Divider orientation="vertical" flexItem />
+    <>
+      <Box sx={{ mb: 1, display: 'flex', gap: 1 }}>
+        {/* Text Formatting */}
+        <Tooltip title="Bold">
+          <IconButton 
+            onClick={() => toggleInlineStyle('BOLD')}
+            color={hasInlineStyle('BOLD') ? "primary" : "default"}
+          >
+            <FormatBoldIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Italic">
+          <IconButton 
+            onClick={() => toggleInlineStyle('ITALIC')}
+            color={hasInlineStyle('ITALIC') ? "primary" : "default"}
+          >
+            <FormatItalicIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Underline">
+          <IconButton 
+            onClick={() => toggleInlineStyle('UNDERLINE')}
+            color={hasInlineStyle('UNDERLINE') ? "primary" : "default"}
+          >
+            <FormatUnderlinedIcon />
+          </IconButton>
+        </Tooltip>
 
-      {/* Text Color Picker */}
-      <TextColorPicker
+        <Divider orientation="vertical" flexItem />
+
+        {/* Text Color Picker */}
+        <TextColorPicker
+          editorState={editorState}
+          onEditorChange={onEditorChange}
+          colorOptions={textColorOptions}
+        />
+
+        {/* Background Color Picker */}
+        <BackgroundColorPicker
+          editorState={editorState}
+          onEditorChange={onEditorChange}
+          colorOptions={bgColorOptions}
+        />
+
+        <Divider orientation="vertical" flexItem />
+
+        {/* List Formatting */}
+        <Tooltip title="Bulleted List">
+          <IconButton 
+            onClick={() => toggleBlockType('unordered-list-item')}
+            color={hasBlockType('unordered-list-item') ? "primary" : "default"}
+          >
+            <FormatListBulletedIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Numbered List">
+          <IconButton 
+            onClick={() => toggleBlockType('ordered-list-item')}
+            color={hasBlockType('ordered-list-item') ? "primary" : "default"}
+          >
+            <FormatListNumberedIcon />
+          </IconButton>
+        </Tooltip>
+
+        <Divider orientation="vertical" flexItem />
+
+        <Tooltip title="Code Block (Ctrl+Shift+K)">
+          <IconButton 
+            onClick={() => toggleBlockType('code-block')}
+            color={hasBlockType('code-block') ? "primary" : "default"}
+          >
+            <CodeIcon />
+          </IconButton>
+        </Tooltip>
+
+        <Divider orientation="vertical" flexItem />
+        
+        <Tooltip title="Add/Edit Link (Ctrl+K) | Remove Link (Ctrl+Shift+U)">
+          <IconButton 
+            onClick={() => setLinkDialogOpen(true)}
+          >
+            <LinkIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
+      
+      {/* Link Dialog */}
+      <LinkDialog
+        isOpen={linkDialogOpen}
         editorState={editorState}
         onEditorChange={onEditorChange}
-        colorOptions={textColorOptions}
+        onClose={() => setLinkDialogOpen(false)}
       />
-
-      {/* Background Color Picker */}
-      <BackgroundColorPicker
-        editorState={editorState}
-        onEditorChange={onEditorChange}
-        colorOptions={bgColorOptions}
-      />
-
-      <Divider orientation="vertical" flexItem />
-      <Tooltip title="Bulleted List">
-        <IconButton 
-          onClick={() => toggleBlockType('unordered-list-item')}
-          color={hasBlockType('unordered-list-item') ? "primary" : "default"}
-        >
-          <FormatListBulletedIcon />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Numbered List">
-        <IconButton 
-          onClick={() => toggleBlockType('ordered-list-item')}
-          color={hasBlockType('ordered-list-item') ? "primary" : "default"}
-        >
-          <FormatListNumberedIcon />
-        </IconButton>
-      </Tooltip>
-      <Divider orientation="vertical" flexItem />
-      <Tooltip title="Code Block (Ctrl+Shift+K)">
-        <IconButton 
-          onClick={() => toggleBlockType('code-block')}
-          color={hasBlockType('code-block') ? "primary" : "default"}
-        >
-          <CodeIcon />
-        </IconButton>
-      </Tooltip>
-      <Divider orientation="vertical" flexItem />
-      <Tooltip title="Add/Edit Link (Ctrl+K) | Remove Link (Ctrl+Shift+U)">
-        <IconButton 
-          onClick={onOpenLinkDialog}
-        >
-          <LinkIcon />
-        </IconButton>
-      </Tooltip>
-    </Box>
+    </>
   );
 };
 

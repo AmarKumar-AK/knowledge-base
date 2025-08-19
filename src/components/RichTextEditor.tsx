@@ -12,7 +12,7 @@ import 'draft-js/dist/Draft.css';
 import '../RichTextEditor.css';
 import colorStyleMap, { textColorOptions, bgColorOptions } from './colorStyleMap';
 import TagsInput from './tags';
-import { EditorToolbar, LinkDialog } from './toolbar';
+import { EditorToolbar } from './toolbar';
 import {
   Box,
   TextField,
@@ -99,9 +99,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   // State for tags
   const [tags, setTags] = useState<string[]>(initialTags);
   
-  // State for link dialog
-  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
-
   useEffect(() => {
     if (initialContent) {
       try {
@@ -132,7 +129,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       return 'handled';
     }
     if (command === 'add-link') {
-      openLinkDialog();
+      // We can't directly open the dialog here since it's now in the toolbar
+      // But we'll keep the command for completeness
       return 'handled';
     }
     if (command === 'remove-link') {
@@ -155,11 +153,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       return 'handled';
     }
     return 'not-handled';
-  };
-
-  // Simple function to open link dialog
-  const openLinkDialog = () => {
-    setLinkDialogOpen(true);
   };
 
   const keyBindingFn = (e: React.KeyboardEvent) => {
@@ -209,7 +202,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         onEditorChange={handleEditorChange}
         textColorOptions={textColorOptions}
         bgColorOptions={bgColorOptions}
-        onOpenLinkDialog={openLinkDialog}
       />
       
       <Paper 
@@ -243,14 +235,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       >
         {isSaving ? 'Saving...' : 'Save Document'}
       </Button>
-
-      {/* Link Dialog */}
-      <LinkDialog
-        isOpen={linkDialogOpen}
-        editorState={editorState}
-        onEditorChange={handleEditorChange}
-        onClose={() => setLinkDialogOpen(false)}
-      />
     </Box>
   );
 };
