@@ -32,8 +32,6 @@ import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
 import CodeIcon from '@mui/icons-material/Code';
 import LinkIcon from '@mui/icons-material/Link';
 import SaveIcon from '@mui/icons-material/Save';
-import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
-import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
 
 interface RichTextEditorProps {
   initialTitle?: string;
@@ -116,26 +114,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [linkText, setLinkText] = useState('');
-  
-  // State for color pickers
-  const [textColorAnchorEl, setTextColorAnchorEl] = useState<null | HTMLElement>(null);
-  const [bgColorAnchorEl, setBgColorAnchorEl] = useState<null | HTMLElement>(null);
-
-  const openTextColorPicker = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setTextColorAnchorEl(event.currentTarget);
-  };
-
-  const closeTextColorPicker = () => {
-    setTextColorAnchorEl(null);
-  };
-
-  const openBgColorPicker = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setBgColorAnchorEl(event.currentTarget);
-  };
-
-  const closeBgColorPicker = () => {
-    setBgColorAnchorEl(null);
-  };
 
   useEffect(() => {
     if (initialContent) {
@@ -316,46 +294,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     handleEditorChange(RichUtils.toggleInlineStyle(editorState, style));
   };
   
-  // Apply a specific text color
-  const applyTextColor = (colorStyle: string) => {
-    toggleInlineStyle(colorStyle);
-    closeTextColorPicker();
-  };
-  
-  // Apply a specific background color
-  const applyBgColor = (colorStyle: string) => {
-    toggleInlineStyle(colorStyle);
-    closeBgColorPicker();
-  };
-  
-  // Remove text color from selected text
-  const removeTextColor = () => {
-    // Remove all text color styles
-    let nextEditorState = editorState;
-    textColorOptions.forEach(({ style }: { style: string }) => {
-      if (editorState.getCurrentInlineStyle().has(style)) {
-        nextEditorState = RichUtils.toggleInlineStyle(nextEditorState, style);
-      }
-    });
-    
-    handleEditorChange(nextEditorState);
-    closeTextColorPicker();
-  };
-  
-  // Remove background color from selected text
-  const removeBgColor = () => {
-    // Remove all background color styles
-    let nextEditorState = editorState;
-    bgColorOptions.forEach(({ style }: { style: string }) => {
-      if (editorState.getCurrentInlineStyle().has(style)) {
-        nextEditorState = RichUtils.toggleInlineStyle(nextEditorState, style);
-      }
-    });
-    
-    handleEditorChange(nextEditorState);
-    closeBgColorPicker();
-  };
-  
   const toggleBlockType = (blockType: string) => {
     handleEditorChange(RichUtils.toggleBlockType(editorState, blockType));
   };
@@ -422,16 +360,21 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           </IconButton>
         </Tooltip>
         <Divider orientation="vertical" flexItem />
-        <Tooltip title="Text Color">
-          <IconButton onClick={openTextColorPicker}>
-            <FormatColorTextIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Background Color">
-          <IconButton onClick={openBgColorPicker}>
-            <FormatColorFillIcon />
-          </IconButton>
-        </Tooltip>
+
+        {/* Text Color Picker */}
+        <TextColorPicker
+          editorState={editorState}
+          onEditorChange={handleEditorChange}
+          colorOptions={textColorOptions}
+        />
+
+        {/* Background Color Picker */}
+        <BackgroundColorPicker
+          editorState={editorState}
+          onEditorChange={handleEditorChange}
+          colorOptions={bgColorOptions}
+        />
+        
         <Divider orientation="vertical" flexItem />
         <Tooltip title="Bulleted List">
           <IconButton 
@@ -510,26 +453,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         onRemoveLink={removeLink}
         onLinkTextChange={setLinkText}
         onLinkUrlChange={setLinkUrl}
-      />
-
-      {/* Text Color Picker */}
-      <TextColorPicker
-        open={Boolean(textColorAnchorEl)}
-        anchorEl={textColorAnchorEl}
-        onClose={closeTextColorPicker}
-        onColorSelect={applyTextColor}
-        onColorRemove={removeTextColor}
-        colorOptions={textColorOptions}
-      />
-
-      {/* Background Color Picker */}
-      <BackgroundColorPicker
-        open={Boolean(bgColorAnchorEl)}
-        anchorEl={bgColorAnchorEl}
-        onClose={closeBgColorPicker}
-        onColorSelect={applyBgColor}
-        onColorRemove={removeBgColor}
-        colorOptions={bgColorOptions}
       />
     </Box>
   );
