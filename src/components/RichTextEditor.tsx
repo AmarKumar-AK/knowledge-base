@@ -11,8 +11,9 @@ import {
 import { Editor } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import '../RichTextEditor.css';
-import colorStyleMap, { textColorOptions, bgColorOptions, ColorOption } from './colorStyleMap';
+import colorStyleMap, { textColorOptions, bgColorOptions } from './colorStyleMap';
 import BackgroundColorPicker from './editor/BackgroundColorPicker';
+import TextColorPicker from './editor/TextColorPicker';
 import {
   Box,
   TextField,
@@ -28,8 +29,7 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle,
-  Popover
+  DialogTitle
 } from '@mui/material';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
@@ -42,7 +42,6 @@ import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
 import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
-import ClearIcon from '@mui/icons-material/Clear';
 
 interface RichTextEditorProps {
   initialTitle?: string;
@@ -622,42 +621,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       </Dialog>
 
       {/* Text Color Picker */}
-      <Popover
+      <TextColorPicker
         open={Boolean(textColorAnchorEl)}
         anchorEl={textColorAnchorEl}
         onClose={closeTextColorPicker}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
-      >
-        <Box sx={{ p: 1, display: 'flex', flexWrap: 'wrap', maxWidth: '220px' }}>
-          {textColorOptions.map((option: ColorOption) => (
-            <Tooltip key={option.style} title={option.label}>
-              <IconButton
-                onClick={() => applyTextColor(option.style)}
-                sx={{
-                  width: 28,
-                  height: 28,
-                  m: 0.5,
-                  backgroundColor: option.color,
-                  '&:hover': {
-                    backgroundColor: option.color,
-                    opacity: 0.8,
-                  },
-                }}
-              >
-                <span />
-              </IconButton>
-            </Tooltip>
-          ))}
-          <Tooltip title="Remove Color">
-            <IconButton onClick={removeTextColor} sx={{ m: 0.5 }}>
-              <ClearIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Popover>
+        onColorSelect={applyTextColor}
+        onColorRemove={removeTextColor}
+        colorOptions={textColorOptions}
+      />
 
       {/* Background Color Picker */}
       <BackgroundColorPicker
