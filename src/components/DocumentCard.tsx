@@ -20,7 +20,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDelete }) => {
   const navigate = useNavigate();
   
   // Format date to a readable string
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -43,29 +43,76 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDelete }) => {
   };
 
   return (
-    <Card sx={{ minWidth: 275, mb: 2 }}>
-      <CardContent>
-        <Typography variant="h5" component="div" gutterBottom>
+    <Card sx={{ 
+      minWidth: 275, 
+      mb: 2, 
+      height: 270, // Increased height to accommodate content better
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      <CardContent sx={{ flex: '1 0 auto', pb: 1 }}>
+        {/* One line for heading */}
+        <Typography 
+          variant="h6" 
+          component="div" 
+          sx={{ 
+            mb: 1.5, // Increased margin-bottom
+            height: '1.5em',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}
+        >
           {document.title}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        
+        {/* Two lines for content */}
+        <Typography 
+          variant="body2" 
+          color="text.secondary"
+          sx={{ 
+            height: '3em', // Increased height for content (approx 2-3 lines)
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            mb: 2 // Increased margin-bottom to create more space
+          }}
+        >
           {getContentPreview()}
         </Typography>
-        <Box sx={{ mt: 2, mb: 1 }}>
+        
+        {/* Area for tags with increased height */}
+        <Box sx={{ 
+          height: '4.5em', // Increased height for tags section
+          overflow: 'hidden',
+          mb: 1.5 // Increased margin-bottom
+        }}>
           {document.tags.map((tag, index) => (
             <Chip 
               key={index} 
               label={tag} 
               size="small" 
-              sx={{ mr: 0.5, mb: 0.5 }} 
+              sx={{ mr: 0.5, mb: 0.75 }} // Increased vertical spacing between tag rows
             />
           ))}
         </Box>
-        <Typography variant="caption" color="text.secondary">
+        
+        {/* One line for updated date */}
+        <Typography 
+          variant="caption" 
+          color="text.secondary"
+          sx={{
+            display: 'block',
+            height: '1.5em',
+            overflow: 'hidden'
+          }}
+        >
           Updated: {formatDate(document.updatedAt)}
         </Typography>
       </CardContent>
-      <CardActions>
+      <CardActions sx={{ pt: 0 }}>
         <Button 
           size="small" 
           onClick={() => navigate(`/view/${document.id}`)}

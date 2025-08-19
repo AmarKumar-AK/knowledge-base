@@ -78,11 +78,14 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
           variant="h6"
           noWrap
           component="div"
-          sx={{ display: { xs: 'none', sm: 'block' } }}
+          sx={{ 
+            display: { xs: 'none', sm: 'block' },
+            fontWeight: 'bold'
+          }}
           onClick={() => navigate('/')}
           style={{ cursor: 'pointer' }}
         >
-          Knowledge Base
+          Pagescape
         </Typography>
         <Search>
           <SearchIconWrapper>
