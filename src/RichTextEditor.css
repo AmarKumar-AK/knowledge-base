@@ -61,12 +61,34 @@
   cursor: pointer;
 }
 
+/* Basic text formatting */
 .public-DraftStyleDefault-italic {
   font-style: italic;
 }
 
 .public-DraftStyleDefault-underline {
   text-decoration: underline;
+}
+
+/* Color picker button styles */
+.color-button {
+  width: 24px;
+  height: 24px;
+  margin: 2px;
+  cursor: pointer;
+  border-radius: 2px;
+  border: 1px solid #ccc;
+}
+
+.color-button:hover {
+  opacity: 0.8;
+}
+
+.color-picker-container {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 160px;
+  padding: 5px;
 }
 
 /* Read-only editor styles */

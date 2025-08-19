@@ -11,6 +11,7 @@ import {
 import { Editor } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import '../RichTextEditor.css';
+import colorStyleMap, { textColorOptions, bgColorOptions, ColorOption } from './colorStyleMap';
 import {
   Box,
   TextField,
@@ -26,7 +27,8 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle,
+  Popover
 } from '@mui/material';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
@@ -37,6 +39,9 @@ import CodeIcon from '@mui/icons-material/Code';
 import LinkIcon from '@mui/icons-material/Link';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
+import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
+import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
+import ClearIcon from '@mui/icons-material/Clear';
 
 interface RichTextEditorProps {
   initialTitle?: string;
@@ -120,6 +125,26 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [linkText, setLinkText] = useState('');
+  
+  // State for color pickers
+  const [textColorAnchorEl, setTextColorAnchorEl] = useState<null | HTMLElement>(null);
+  const [bgColorAnchorEl, setBgColorAnchorEl] = useState<null | HTMLElement>(null);
+
+  const openTextColorPicker = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setTextColorAnchorEl(event.currentTarget);
+  };
+
+  const closeTextColorPicker = () => {
+    setTextColorAnchorEl(null);
+  };
+
+  const openBgColorPicker = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setBgColorAnchorEl(event.currentTarget);
+  };
+
+  const closeBgColorPicker = () => {
+    setBgColorAnchorEl(null);
+  };
 
   useEffect(() => {
     if (initialContent) {
@@ -318,6 +343,46 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     handleEditorChange(RichUtils.toggleInlineStyle(editorState, style));
   };
   
+  // Apply a specific text color
+  const applyTextColor = (colorStyle: string) => {
+    toggleInlineStyle(colorStyle);
+    closeTextColorPicker();
+  };
+  
+  // Apply a specific background color
+  const applyBgColor = (colorStyle: string) => {
+    toggleInlineStyle(colorStyle);
+    closeBgColorPicker();
+  };
+  
+  // Remove text color from selected text
+  const removeTextColor = () => {
+    // Remove all text color styles
+    let nextEditorState = editorState;
+    textColorOptions.forEach(({ style }: { style: string }) => {
+      if (editorState.getCurrentInlineStyle().has(style)) {
+        nextEditorState = RichUtils.toggleInlineStyle(nextEditorState, style);
+      }
+    });
+    
+    handleEditorChange(nextEditorState);
+    closeTextColorPicker();
+  };
+  
+  // Remove background color from selected text
+  const removeBgColor = () => {
+    // Remove all background color styles
+    let nextEditorState = editorState;
+    bgColorOptions.forEach(({ style }: { style: string }) => {
+      if (editorState.getCurrentInlineStyle().has(style)) {
+        nextEditorState = RichUtils.toggleInlineStyle(nextEditorState, style);
+      }
+    });
+    
+    handleEditorChange(nextEditorState);
+    closeBgColorPicker();
+  };
+  
   const toggleBlockType = (blockType: string) => {
     handleEditorChange(RichUtils.toggleBlockType(editorState, blockType));
   };
@@ -417,6 +482,17 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           </IconButton>
         </Tooltip>
         <Divider orientation="vertical" flexItem />
+        <Tooltip title="Text Color">
+          <IconButton onClick={openTextColorPicker}>
+            <FormatColorTextIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Background Color">
+          <IconButton onClick={openBgColorPicker}>
+            <FormatColorFillIcon />
+          </IconButton>
+        </Tooltip>
+        <Divider orientation="vertical" flexItem />
         <Tooltip title="Bulleted List">
           <IconButton 
             onClick={() => toggleBlockType('unordered-list-item')}
@@ -470,6 +546,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           keyBindingFn={keyBindingFn}
           spellCheck={true}
           placeholder="Start typing here..."
+          customStyleMap={colorStyleMap}
         />
       </Paper>
       
@@ -542,6 +619,82 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Text Color Picker */}
+      <Popover
+        open={Boolean(textColorAnchorEl)}
+        anchorEl={textColorAnchorEl}
+        onClose={closeTextColorPicker}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+      >
+        <Box sx={{ p: 1, display: 'flex', flexWrap: 'wrap', maxWidth: '220px' }}>
+          {textColorOptions.map((option: ColorOption) => (
+            <Tooltip key={option.style} title={option.label}>
+              <IconButton
+                onClick={() => applyTextColor(option.style)}
+                sx={{
+                  width: 28,
+                  height: 28,
+                  m: 0.5,
+                  backgroundColor: option.color,
+                  '&:hover': {
+                    backgroundColor: option.color,
+                    opacity: 0.8,
+                  },
+                }}
+              >
+                <span />
+              </IconButton>
+            </Tooltip>
+          ))}
+          <Tooltip title="Remove Color">
+            <IconButton onClick={removeTextColor} sx={{ m: 0.5 }}>
+              <ClearIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Popover>
+
+      {/* Background Color Picker */}
+      <Popover
+        open={Boolean(bgColorAnchorEl)}
+        anchorEl={bgColorAnchorEl}
+        onClose={closeBgColorPicker}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+      >
+        <Box sx={{ p: 1, display: 'flex', flexWrap: 'wrap', maxWidth: '220px' }}>
+          {bgColorOptions.map((option: ColorOption) => (
+            <Tooltip key={option.style} title={option.label}>
+              <IconButton
+                onClick={() => applyBgColor(option.style)}
+                sx={{
+                  width: 28,
+                  height: 28,
+                  m: 0.5,
+                  backgroundColor: option.color,
+                  '&:hover': {
+                    backgroundColor: option.color,
+                    opacity: 0.8,
+                  },
+                }}
+              >
+                <span />
+              </IconButton>
+            </Tooltip>
+          ))}
+          <Tooltip title="Remove Background">
+            <IconButton onClick={removeBgColor} sx={{ m: 0.5 }}>
+              <ClearIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Popover>
     </Box>
   );
 };

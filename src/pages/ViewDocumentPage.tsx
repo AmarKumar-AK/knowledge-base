@@ -16,6 +16,7 @@ import 'draft-js/dist/Draft.css';
 import Header from '../components/Header';
 import { getDocumentById } from '../utils/documentUtils';
 import { Document } from '../models/Document';
+import colorStyleMap from '../components/colorStyleMap';
 
 // LinkComponent for the decorator (named differently to avoid conflict with react-router Link)
 const LinkComponent = (props: any) => {
@@ -178,6 +179,7 @@ const ViewDocumentPage: React.FC = () => {
                     editorState={editorState}
                     readOnly={true}
                     onChange={() => {}}
+                    customStyleMap={colorStyleMap}
                   />
                 </Paper>
               </Box>
