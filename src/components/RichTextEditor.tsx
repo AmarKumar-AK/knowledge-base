@@ -12,6 +12,7 @@ import { Editor } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import '../RichTextEditor.css';
 import colorStyleMap, { textColorOptions, bgColorOptions, ColorOption } from './colorStyleMap';
+import BackgroundColorPicker from './editor/BackgroundColorPicker';
 import {
   Box,
   TextField,
@@ -659,42 +660,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       </Popover>
 
       {/* Background Color Picker */}
-      <Popover
+      <BackgroundColorPicker
         open={Boolean(bgColorAnchorEl)}
         anchorEl={bgColorAnchorEl}
         onClose={closeBgColorPicker}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
-      >
-        <Box sx={{ p: 1, display: 'flex', flexWrap: 'wrap', maxWidth: '220px' }}>
-          {bgColorOptions.map((option: ColorOption) => (
-            <Tooltip key={option.style} title={option.label}>
-              <IconButton
-                onClick={() => applyBgColor(option.style)}
-                sx={{
-                  width: 28,
-                  height: 28,
-                  m: 0.5,
-                  backgroundColor: option.color,
-                  '&:hover': {
-                    backgroundColor: option.color,
-                    opacity: 0.8,
-                  },
-                }}
-              >
-                <span />
-              </IconButton>
-            </Tooltip>
-          ))}
-          <Tooltip title="Remove Background">
-            <IconButton onClick={removeBgColor} sx={{ m: 0.5 }}>
-              <ClearIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Popover>
+        onColorSelect={applyBgColor}
+        onColorRemove={removeBgColor}
+        colorOptions={bgColorOptions}
+      />
     </Box>
   );
 };
