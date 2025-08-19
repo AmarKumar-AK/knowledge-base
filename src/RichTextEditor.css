@@ -26,11 +26,6 @@
   padding-left: 1.5em;
 }
 
-/* Bold, italic, underline styles */
-.public-DraftStyleDefault-bold {
-  font-weight: bold;
-}
-
 /* Code block styles */
 .public-DraftStyleDefault-pre {
   background-color: #f5f5f5;
@@ -47,55 +42,8 @@
 }
 
 /* Link styles */
-.public-DraftStyleDefault-link,
-.public-DraftStyleDefault-link a {
-  text-decoration: underline;
-  color: #1976d2;
-  cursor: pointer;
-}
-
-/* Make sure links in the readonly view are also properly styled */
 .DraftEditor-root a {
   color: #1976d2;
   text-decoration: underline;
   cursor: pointer;
-}
-
-/* Basic text formatting */
-.public-DraftStyleDefault-italic {
-  font-style: italic;
-}
-
-.public-DraftStyleDefault-underline {
-  text-decoration: underline;
-}
-
-/* Color picker button styles */
-.color-button {
-  width: 24px;
-  height: 24px;
-  margin: 2px;
-  cursor: pointer;
-  border-radius: 2px;
-  border: 1px solid #ccc;
-}
-
-.color-button:hover {
-  opacity: 0.8;
-}
-
-.color-picker-container {
-  display: flex;
-  flex-wrap: wrap;
-  max-width: 160px;
-  padding: 5px;
-}
-
-/* Read-only editor styles */
-.read-only-editor-wrapper {
-  border: none;
-}
-
-.read-only-editor {
-  padding: 0;
 }
