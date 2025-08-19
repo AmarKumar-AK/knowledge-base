@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Header from '../components/Header';
-import RichTextEditor from '../components/RichTextEditor';
+import SimpleEditor from '../components/SimpleEditor';
 import { getDocumentById, saveDocument } from '../utils/documentUtils';
 
 const EditDocumentPage: React.FC = () => {
@@ -114,7 +114,7 @@ const EditDocumentPage: React.FC = () => {
             </Box>
           ) : (
             <Box sx={{ mt: 3 }}>
-              <RichTextEditor
+              <SimpleEditor
                 initialTitle={title}
                 initialContent={content}
                 initialTags={tags}

@@ -11,9 +11,8 @@ import {
   CircularProgress
 } from '@mui/material';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { convertFromRaw, EditorState } from 'draft-js';
-import { Editor } from 'react-draft-wysiwyg';
-import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
+import { convertFromRaw, EditorState, Editor } from 'draft-js';
+import 'draft-js/dist/Draft.css';
 import Header from '../components/Header';
 import { getDocumentById } from '../utils/documentUtils';
 import { Document } from '../models/Document';
@@ -123,13 +122,22 @@ const ViewDocumentPage: React.FC = () => {
               </Typography>
               
               <Box sx={{ mt: 3 }}>
-                <Editor
-                  editorState={editorState}
-                  readOnly={true}
-                  toolbarHidden={true}
-                  wrapperClassName="read-only-editor-wrapper"
-                  editorClassName="read-only-editor"
-                />
+                <Paper 
+                  elevation={0} 
+                  sx={{ 
+                    p: 2, 
+                    backgroundColor: 'transparent',
+                    '& .DraftEditor-root': {
+                      minHeight: '200px'
+                    }
+                  }}
+                >
+                  <Editor
+                    editorState={editorState}
+                    readOnly={true}
+                    onChange={() => {}}
+                  />
+                </Paper>
               </Box>
             </Paper>
             

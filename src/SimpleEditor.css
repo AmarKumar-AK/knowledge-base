@@ -1,0 +1,49 @@
+/* Simple Editor Styles */
+.simple-editor-wrapper {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-height: 300px;
+}
+
+.DraftEditor-root {
+  padding: 10px;
+  min-height: 250px;
+  cursor: text;
+}
+
+.DraftEditor-editorContainer {
+  min-height: 240px;
+}
+
+.public-DraftStyleDefault-block {
+  margin: 0.5em 0;
+}
+
+/* Style for list items */
+.public-DraftStyleDefault-unorderedListItem,
+.public-DraftStyleDefault-orderedListItem {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+/* Bold, italic, underline styles */
+.public-DraftStyleDefault-bold {
+  font-weight: bold;
+}
+
+.public-DraftStyleDefault-italic {
+  font-style: italic;
+}
+
+.public-DraftStyleDefault-underline {
+  text-decoration: underline;
+}
+
+/* Read-only editor styles */
+.read-only-editor-wrapper {
+  border: none;
+}
+
+.read-only-editor {
+  padding: 0;
+}

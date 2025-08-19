@@ -3,6 +3,7 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   min-height: 300px;
+  position: relative;
 }
 
 .rich-editor {
@@ -23,13 +24,191 @@
   border-bottom: 1px solid #eee;
   margin-bottom: 10px;
   padding: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  position: relative;
+  background: white;
+  z-index: 1;
 }
 
 .rdw-option-wrapper {
   border: 1px solid #f1f1f1;
   padding: 5px;
+  margin: 2px;
+  border-radius: 2px;
+  height: 28px;
+  width: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
 }
 
 .rdw-option-active {
   background-color: #f1f1f1;
+  box-shadow: 1px 1px 0px #bfbdbd inset;
+}
+
+.rdw-dropdown-wrapper {
+  height: 30px;
+  border-radius: 2px;
+  margin: 2px;
+  cursor: pointer;
+  border: 1px solid #f1f1f1;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.rdw-dropdown-optionwrapper {
+  z-index: 9999;
+  position: absolute;
+  background: white;
+  border: 1px solid #f1f1f1;
+  width: auto;
+  min-width: 100%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+}
+
+.rdw-dropdown-carettoopen {
+  position: relative;
+  top: 40%;
+}
+
+.rdw-dropdown-carettoclose {
+  position: relative;
+  top: 40%;
+}
+
+.rdw-dropdown-selectedtext {
+  display: flex;
+  position: relative;
+  height: 100%;
+  align-items: center;
+  padding: 0 5px;
+}
+
+.rdw-embedded-modal, 
+.rdw-emoji-modal, 
+.rdw-image-modal, 
+.rdw-link-modal {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  position: absolute;
+  z-index: 9999;
+  background: white;
+  border: 1px solid #f1f1f1;
+}
+
+.rdw-colorpicker-modal {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  position: absolute;
+  z-index: 9999;
+  background: white;
+  border: 1px solid #f1f1f1;
+}
+
+.rdw-emoji-modal {
+  width: 235px;
+  height: 180px;
+  overflow: auto;
+  padding: 15px;
+}
+
+.rdw-embedded-modal {
+  width: 300px;
+  height: auto;
+  padding: 15px;
+}
+
+.rdw-fontsize-dropdown {
+  min-width: 50px;
+}
+
+.rdw-fontfamily-dropdown {
+  min-width: 100px;
+}
+
+.rdw-emoji-wrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  position: relative;
+  flex-wrap: wrap;
+}
+
+.rdw-emoji-modal {
+  overflow-y: auto;
+  position: absolute !important;
+  top: 35px !important;
+  left: 5px !important;
+  z-index: 10000 !important;
+  width: 235px !important;
+  height: 180px !important;
+  border: 1px solid #F1F1F1 !important;
+  padding: 15px !important;
+  background: white !important;
+  box-shadow: 0px 3px 5px -1px rgba(0,0,0,0.2), 0px 6px 10px 0px rgba(0,0,0,0.14), 0px 1px 18px 0px rgba(0,0,0,0.12) !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: space-between !important;
+}
+
+.rdw-emoji-icon {
+  width: 24px !important;
+  height: 24px !important;
+  margin: 2px !important;
+  padding: 2px !important;
+  cursor: pointer !important;
+  font-size: 18px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.rdw-emoji-icon:hover {
+  background-color: #f1f1f1 !important;
+  border-radius: 2px !important;
+}
+
+.rdw-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+
+.rich-editor-toolbar {
+  border: 1px solid #f1f1f1 !important;
+  padding: 6px !important;
+  border-radius: 2px !important;
+  position: sticky !important;
+  top: 0 !important;
+  background-color: white !important;
+  z-index: 2000 !important;
+}
+
+.rdw-emoji-modal {
+  position: absolute !important;
+  top: 35px !important;
+  left: 5px !important;
+  width: 235px !important;
+  height: 180px !important;
+  border: 1px solid #F1F1F1 !important;
+  padding: 15px !important;
+  background: white !important;
+  box-shadow: 0px 3px 5px -1px rgba(0,0,0,0.2), 0px 6px 10px 0px rgba(0,0,0,0.14), 0px 1px 18px 0px rgba(0,0,0,0.12) !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: space-between !important;
+  z-index: 100000 !important;
+  overflow: auto !important;
+}
+
+.rdw-block-dropdown {
+  min-width: 80px;
 }
