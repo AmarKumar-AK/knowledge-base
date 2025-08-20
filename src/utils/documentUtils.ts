@@ -85,8 +85,8 @@ export const getDocumentById = async (id: string): Promise<Document | undefined>
 };
 
 // Search documents through API
-export const searchDocuments = async (query: string): Promise<Document[]> => {
-  if (!query.trim()) return getDocuments();
+export const searchDocuments = async (query: string): Promise<{documents: Document[], folders: any[]}> => {
+  if (!query.trim()) return { documents: await getDocuments(), folders: [] };
   
   try {
     const response = await fetch(`${API_URL}/search?query=${encodeURIComponent(query)}`);
@@ -97,7 +97,7 @@ export const searchDocuments = async (query: string): Promise<Document[]> => {
     return await response.json();
   } catch (error) {
     console.error('Error searching documents:', error);
-    // Return empty array if search fails
-    return [];
+    // Return empty arrays if search fails
+    return { documents: [], folders: [] };
   }
 };

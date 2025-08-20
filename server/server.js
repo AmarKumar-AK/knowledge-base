@@ -130,28 +130,55 @@ app.get('/api/search', (req, res) => {
       return res.status(400).json({ message: 'Search query is required' });
     }
     
-    const files = fs.readdirSync(DOCUMENTS_DIR);
-    const documents = files
+    // Get all documents for searching
+    const documentFiles = fs.readdirSync(DOCUMENTS_DIR);
+    const documents = documentFiles
       .filter(file => file.endsWith('.json'))
       .map(file => {
         const fileContent = fs.readFileSync(path.join(DOCUMENTS_DIR, file), 'utf8');
         return JSON.parse(fileContent);
-      })
+      });
+
+    // Get all folders for searching
+    const folderFiles = fs.readdirSync(FOLDERS_DIR);
+    const folders = folderFiles
+      .filter(file => file.endsWith('.json'))
+      .map(file => {
+        const fileContent = fs.readFileSync(path.join(FOLDERS_DIR, file), 'utf8');
+        return JSON.parse(fileContent);
+      });
+    
+    const lowerQuery = query.toLowerCase();
+    
+    // Filter documents based on search query
+    const matchingDocuments = documents
       .filter(doc => {
-        const lowerQuery = query.toLowerCase();
         return (
           doc.title.toLowerCase().includes(lowerQuery) ||
-          doc.tags.some(tag => tag.toLowerCase().includes(lowerQuery)) ||
-          doc.content.toLowerCase().includes(lowerQuery)
+          (doc.tags && doc.tags.some(tag => tag.toLowerCase().includes(lowerQuery))) ||
+          (doc.content && doc.content.toLowerCase().includes(lowerQuery))
         );
       })
-      // Sort search results alphabetically by title
       .sort((a, b) => a.title.localeCompare(b.title));
     
-    res.json(documents);
+    // Filter folders based on search query
+    const matchingFolders = folders
+      .filter(folder => {
+        return (
+          folder.name.toLowerCase().includes(lowerQuery) ||
+          (folder.description && folder.description.toLowerCase().includes(lowerQuery))
+        );
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Return combined results with type indicator
+    res.json({
+      documents: matchingDocuments,
+      folders: matchingFolders
+    });
   } catch (error) {
-    console.error('Error searching documents:', error);
-    res.status(500).json({ message: 'Error searching documents' });
+    console.error('Error searching documents and folders:', error);
+    res.status(500).json({ message: 'Error searching documents and folders' });
   }
 });
 

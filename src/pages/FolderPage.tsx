@@ -21,7 +21,7 @@ import FolderDialog from '../components/FolderDialog';
 import Layout from '../components/Layout';
 import { Document } from '../models/Document';
 import { Folder } from '../models/Folder';
-import { getDocuments, deleteDocument } from '../utils/documentUtils';
+import { getDocuments, deleteDocument, searchDocuments } from '../utils/documentUtils';
 import { getFolders, getFolderById, saveFolder, deleteFolder } from '../utils/folderUtils';
 
 const FolderPage: React.FC = () => {
@@ -35,10 +35,24 @@ const FolderPage: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [subFolders, setSubFolders] = useState<Folder[]>([]);
   const [allFolders, setAllFolders] = useState<Folder[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
+  const [filteredSubFolders, setFilteredSubFolders] = useState<Folder[]>([]);
   
   // Dialog states
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
   const [editingFolder, setEditingFolder] = useState<Folder | undefined>(undefined);
+  
+  useEffect(() => {
+    if (searchQuery) {
+      // Skip this effect as searching is now handled by the handleSearch function
+      return;
+    } else {
+      // If no search query, show all documents and folders in the current folder
+      setFilteredDocuments(documents);
+      setFilteredSubFolders(subFolders);
+    }
+  }, [searchQuery, documents, subFolders]);
   
   const isRootFolder = id === 'root';
   const folderId = isRootFolder ? null : id;
@@ -82,6 +96,7 @@ const FolderPage: React.FC = () => {
           // Sort sub-folders alphabetically by name
           .sort((a, b) => a.name.localeCompare(b.name));
         setSubFolders(subFolders);
+        setFilteredSubFolders(subFolders);
         
         // Get documents in this folder
         // For now, we'll filter client-side
@@ -91,6 +106,7 @@ const FolderPage: React.FC = () => {
           // Sort documents alphabetically by title
           .sort((a, b) => a.title.localeCompare(b.title));
         setDocuments(docsInFolder);
+        setFilteredDocuments(docsInFolder);
         
       } catch (err) {
         console.error('Error fetching folder data:', err);
@@ -102,6 +118,41 @@ const FolderPage: React.FC = () => {
     
     fetchFolderData();
   }, [id, folderId, isRootFolder]);
+  
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    
+    if (query.trim() === '') {
+      // If search is cleared, show current folder contents
+      setFilteredDocuments(documents);
+      setFilteredSubFolders(subFolders);
+      return;
+    }
+    
+    try {
+      // Search through all documents and folders using the search API
+      const { documents: searchedDocs, folders: searchedFolders } = await searchDocuments(query);
+      
+      if (isRootFolder) {
+        // In root, show all matching documents and folders
+        setFilteredDocuments(searchedDocs);
+        setFilteredSubFolders(searchedFolders);
+      } else {
+        // In a specific folder, show:
+        // 1. Documents directly in this folder that match the search
+        const matchingDocsInFolder = searchedDocs.filter((doc: Document) => doc.folderId === folderId);
+        
+        // 2. Subfolders directly in this folder that match the search
+        const matchingSubFolders = searchedFolders.filter((folder: Folder) => folder.parentId === folderId);
+        
+        setFilteredDocuments(matchingDocsInFolder);
+        setFilteredSubFolders(matchingSubFolders);
+      }
+    } catch (error) {
+      console.error('Error performing search:', error);
+      setError('Failed to perform search');
+    }
+  };
   
   const handleCreateFolder = () => {
     setEditingFolder(undefined);
@@ -224,7 +275,7 @@ const FolderPage: React.FC = () => {
   
   return (
     <Layout>
-      <Header onSearch={() => {}} />
+      <Header onSearch={handleSearch} />
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
           {getFolderPath()}
@@ -276,14 +327,14 @@ const FolderPage: React.FC = () => {
           <>
             <Box sx={{ mb: 2 }}>
               <Typography variant="h6" component="div" sx={{ mb: 2 }}>
-                {subFolders.length > 0 || documents.length > 0 ? 
-                  `Folders & Documents (${subFolders.length + documents.length})` : 
-                  'No content yet'}
+                {filteredSubFolders.length > 0 || filteredDocuments.length > 0 ? 
+                  `${filteredSubFolders.length + filteredDocuments.length} ${(filteredSubFolders.length + filteredDocuments.length) === 1 ? 'item' : 'items'} available` : 
+                  'No items available'}
               </Typography>
 
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                 {/* Show folders first */}
-                {subFolders.map((folder) => (
+                {filteredSubFolders.map((folder) => (
                   <Box key={folder.id} sx={{ width: { xs: '100%', sm: '47%', md: '31%' }, mb: 2 }}>
                     <FolderCard 
                       folder={folder} 
@@ -294,7 +345,7 @@ const FolderPage: React.FC = () => {
                 ))}
                 
                 {/* Then show documents */}
-                {documents.map((doc) => (
+                {filteredDocuments.map((doc) => (
                   <Box key={doc.id} sx={{ width: { xs: '100%', sm: '47%', md: '31%' }, mb: 2 }}>
                     <DocumentCard 
                       document={doc} 
@@ -304,9 +355,9 @@ const FolderPage: React.FC = () => {
                 ))}
               </Box>
               
-              {subFolders.length === 0 && documents.length === 0 && (
+              {filteredSubFolders.length === 0 && filteredDocuments.length === 0 && (
                 <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 4 }}>
-                  This folder is empty. Create a new folder or document to get started.
+                  {searchQuery ? 'No items match your search.' : 'No items available. Create a new folder or document to get started.'}
                 </Typography>
               )}
             </Box>
